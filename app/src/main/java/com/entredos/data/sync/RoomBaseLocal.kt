@@ -49,4 +49,8 @@ class RoomBaseLocal @Inject constructor(
         }
 
     override suspend fun registrosParaFoto(): List<Cambio> = Tablas.todas.flatMap { it.comoCambios(db) }
+
+    override suspend fun aplicarCambios(cambios: List<Cambio>) = db.withTransaction {
+        for (cambio in cambios) Tablas.porNombre(cambio.tabla)?.aplicarRemoto(db, cambio)
+    }
 }

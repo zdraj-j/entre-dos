@@ -102,4 +102,11 @@ class TelefonoFalso(private val dispositivo: String, var hora: Long = 1_000) : B
     }
 
     override suspend fun registrosParaFoto() = registros.values.toList()
+
+    override suspend fun aplicarCambios(cambios: List<Cambio>) {
+        for (c in cambios) {
+            val local = registros["${c.tabla}/${c.id}"]
+            if (Lww.ganaRemoto(local?.hlc, local?.dispositivo, c.hlc, c.dispositivo)) registros["${c.tabla}/${c.id}"] = c
+        }
+    }
 }

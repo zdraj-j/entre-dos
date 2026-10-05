@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.entredos.data.repository.CierreRepositorio
 import com.entredos.data.sync.SincronizacionAutomatica
+import com.entredos.data.wifi.SincronizacionWifi
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,7 @@ class EntreDosApp : Application(), Configuration.Provider {
     @Inject lateinit var fabricaTrabajos: HiltWorkerFactory
     @Inject lateinit var sincronizacion: SincronizacionAutomatica
     @Inject lateinit var cierre: CierreRepositorio
+    @Inject lateinit var wifi: SincronizacionWifi
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(fabricaTrabajos).build()
@@ -25,6 +27,7 @@ class EntreDosApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         sincronizacion.iniciar()
+        wifi.iniciar()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch { runCatching { cierre.archivarSiCorresponde() } }
     }
 }

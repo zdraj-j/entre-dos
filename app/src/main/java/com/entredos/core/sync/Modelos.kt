@@ -72,6 +72,9 @@ interface BaseLocal {
 
     /** Todos los registros sincronizables, eliminados incluidos, para armar una foto. */
     suspend fun registrosParaFoto(): List<Cambio>
+
+    /** En una transacción: aplica cada cambio solo si gana por LWW. Sin archivo (llegan por wifi). */
+    suspend fun aplicarCambios(cambios: List<Cambio>)
 }
 
 object NombresSync {

@@ -15,6 +15,8 @@ data class Ajustes(
     val lectorGenericoActivo: Boolean = false,
     /** Paquetes de las apps que el lector genérico vigila. */
     val appsGenericas: Set<String> = emptySet(),
+    /** "Sincronizar por wifi en casa". */
+    val wifiActivo: Boolean = false,
 )
 
 /** Ajustes que son solo de este teléfono (cada uno tiene sus apps instaladas). No se sincronizan. */
@@ -28,6 +30,7 @@ class AjustesLocales @Inject constructor(@ApplicationContext context: Context) {
 
     fun clasificacionManual(activo: Boolean) = guardar { putBoolean(MANUAL, activo) }
     fun lectorGenerico(activo: Boolean) = guardar { putBoolean(GENERICO, activo) }
+    fun wifi(activo: Boolean) = guardar { putBoolean(WIFI, activo) }
     fun alternarApp(paquete: String) {
         val apps = actual.appsGenericas.toMutableSet().apply { if (!add(paquete)) remove(paquete) }
         guardar { putStringSet(APPS, apps) }
@@ -42,9 +45,10 @@ class AjustesLocales @Inject constructor(@ApplicationContext context: Context) {
         clasificacionManual = prefs.getBoolean(MANUAL, false),
         lectorGenericoActivo = prefs.getBoolean(GENERICO, false),
         appsGenericas = prefs.getStringSet(APPS, emptySet())!!.toSet(),
+        wifiActivo = prefs.getBoolean(WIFI, false),
     )
 
     private companion object {
-        const val MANUAL = "clasificacion_manual"; const val GENERICO = "lector_generico"; const val APPS = "apps_genericas"
+        const val MANUAL = "clasificacion_manual"; const val GENERICO = "lector_generico"; const val APPS = "apps_genericas"; const val WIFI = "wifi"
     }
 }

@@ -29,3 +29,11 @@
 3. Importar `ejemplos/otra-app-ejemplo.csv`: entran 3 y se omite el salario.
 4. Ajustes › Importaciones › Deshacer: desaparece en los dos teléfonos.
 5. Ajustes › Exportar respaldo e importarlo en un hogar de prueba: debe quedar igual.
+
+## Wifi en casa
+1. Activar "Sincronizar por wifi en casa" en los dos teléfonos, con la app abierta y en la misma red.
+2. Desconectar el módem de internet (dejando el wifi encendido) o activar el modo avión y volver a encender solo el wifi.
+3. Registrar un gasto en uno: en unos segundos aparece en el otro. Ajustes muestra "Último intercambio".
+4. "Intercambiar ahora" funciona desde cualquiera de los dos.
+5. Con un tercer teléfono de otro hogar en la misma red: no intercambia nada (Ajustes no muestra pareja visible o muestra el error de autenticación).
+6. Al volver internet, todo sube a Drive igual: reinstalar en un teléfono y recuperar con "Soy …" trae también lo que se pasó por wifi.

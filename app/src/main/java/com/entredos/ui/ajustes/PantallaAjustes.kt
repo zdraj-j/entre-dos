@@ -108,6 +108,8 @@ fun PantallaAjustes(
         HorizontalDivider()
         Column(Modifier.padding(vertical = 8.dp)) { SeccionSincronizacion(alReconectar = alReconectar, alSalir = alSalir) }
         HorizontalDivider()
+        Column(Modifier.padding(vertical = 8.dp)) { SeccionWifi() }
+        HorizontalDivider()
         Seccion("Datos") {
             Dato("Importar y deshacer importaciones", "", alTocar = alImportaciones)
             Dato("Exportar respaldo (.zip)", "", alTocar = { guardarZip("respaldo-entre-dos.zip") { vm.respaldo().bytes } })
