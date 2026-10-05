@@ -72,7 +72,7 @@ fun PantallaDeteccion(alVolver: () -> Unit, alLectorGenerico: () -> Unit, vm: De
     var creando by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
-        Barra("Detección y reglas", alVolver)
+        Barra("Reglas aprendidas", alVolver)
         LazyColumn(Modifier.padding(horizontal = 16.dp)) {
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {

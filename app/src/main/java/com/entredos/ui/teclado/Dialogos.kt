@@ -68,7 +68,7 @@ internal fun DialogoFecha(actual: LocalDate, alConfirmar: (LocalDate) -> Unit, a
 }
 
 /**
- * Se abre solo con un monto válido y al menos dos categorías (lo controla PantallaTeclado).
+ * Se abre solo con un monto válido y al menos dos categorías (lo controla PantallaAnotar).
  * "Ajustar montos": un campo por categoría. La última se calcula sola con lo que falta,
  * así la suma siempre da el total.
  */

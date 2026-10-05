@@ -80,7 +80,7 @@ fun PantallaRecurrentes(alVolver: () -> Unit, vm: RecurrentesViewModel = hiltVie
     var editando by remember { mutableStateOf<RecurrenteEntity?>(null) }
     var creando by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { Barra("Gastos recurrentes", alVolver) }, floatingActionButton = { FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nuevo recurrente") } }) { m ->
+    Scaffold(topBar = { Barra("Gastos fijos", alVolver) }, floatingActionButton = { FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nuevo gasto fijo") } }) { m ->
         LazyColumn(Modifier.fillMaxSize().padding(m).padding(horizontal = 16.dp)) {
             item {
                 Text("Con una palabra del comercio, cuando el banco avise un cobro parecido (10 % o $ 2.000 de margen) se confirma solo.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
@@ -111,7 +111,7 @@ fun PantallaRecurrentes(alVolver: () -> Unit, vm: RecurrentesViewModel = hiltVie
         val cerrar = { creando = false; editando = null }
         AlertDialog(
             onDismissRequest = cerrar,
-            title = { Text(if (r == null) "Nuevo recurrente" else "Editar recurrente") },
+            title = { Text(if (r == null) "Nuevo gasto fijo" else "Editar gasto fijo") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(nombre, { nombre = it.take(60) }, label = { Text("Nombre (ej.: Netflix, Arriendo)") }, singleLine = true, modifier = Modifier.fillMaxWidth())

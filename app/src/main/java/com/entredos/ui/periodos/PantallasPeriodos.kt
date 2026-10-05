@@ -78,9 +78,9 @@ class PeriodosViewModel @Inject constructor(private val db: EntreDosDatabase) : 
 fun PantallaPeriodos(alVolver: () -> Unit, alAbrir: (String) -> Unit, vm: PeriodosViewModel = hiltViewModel()) {
     val periodos by vm.periodos.collectAsState()
     Column(Modifier.fillMaxSize()) {
-        Barra("Periodos anteriores", alVolver)
+        Barra("Meses anteriores", alVolver)
         LazyColumn(Modifier.padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (periodos.isEmpty()) item { EstadoVacio(Icons.Default.History, "Aún no hay periodos cerrados", "Cuando cierren un periodo desde Resumen, o llegue el día de inicio en modo automático, quedará aquí con sus estadísticas.") }
+            if (periodos.isEmpty()) item { EstadoVacio(Icons.Default.History, "Aún no hay meses cerrados", "Cuando cierren el mes desde la pestaña Mes, o llegue el día de inicio en modo automático, quedará aquí con su resumen.") }
             items(periodos, key = { it.id }) { p ->
                 val diferencia = p.totalPresupuestado - p.totalGastado
                 Tarjeta(alTocar = { alAbrir(p.id) }) {
@@ -107,7 +107,7 @@ fun PantallaDetallePeriodo(id: String, alVolver: () -> Unit, vm: PeriodosViewMod
     val guardar = recordarGuardado("text/csv")
 
     Column(Modifier.fillMaxSize()) {
-        Barra("Periodo", alVolver)
+        Barra("Mes cerrado", alVolver)
         val (p, r, gastos) = datos ?: return@Column
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = MARGEN)) {
             Tarjeta(Modifier.padding(vertical = 6.dp)) {

@@ -46,4 +46,23 @@ object Periodo {
         val inicio = ultimoCierre ?: inicioActual.minusMonths(1).atStartOfDay(zona).toInstant().toEpochMilli()
         return inicio to fin
     }
+
+    /** Fin (exclusivo) del periodo que empieza en [inicio]: el siguiente día de inicio. */
+    fun finDelPeriodo(diaInicio: Int, inicio: LocalDate): LocalDate {
+        val siguiente = inicio.plusMonths(1)
+        return siguiente.withDayOfMonth(minOf(diaInicio, siguiente.lengthOfMonth()))
+    }
+
+    /**
+     * ¿Se van a pasar del presupuesto a este ritmo? Proyecta lo gastado hasta hoy al total de días
+     * del periodo. Solo avisa desde el tercer día, para no alarmar por un gasto grande el día 1.
+     */
+    fun seVanAPasar(gastado: Long, asignado: Long, inicio: LocalDate, fin: LocalDate, hoy: LocalDate): Boolean {
+        if (asignado <= 0) return false
+        if (gastado > asignado) return true
+        val total = java.time.temporal.ChronoUnit.DAYS.between(inicio, fin).coerceAtLeast(1)
+        val transcurridos = (java.time.temporal.ChronoUnit.DAYS.between(inicio, hoy) + 1).coerceIn(1, total)
+        if (transcurridos < 3) return false
+        return gastado * total / transcurridos > asignado
+    }
 }

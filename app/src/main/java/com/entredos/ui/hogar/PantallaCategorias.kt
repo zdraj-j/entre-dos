@@ -1,6 +1,8 @@
-package com.entredos.ui.presupuesto
+package com.entredos.ui.hogar
 
 import androidx.compose.foundation.background
+import com.entredos.ui.comun.EncabezadoVolver
+import androidx.compose.foundation.layout.height
 import com.entredos.ui.comun.TituloPantalla
 import com.entredos.ui.comun.Tarjeta
 import com.entredos.ui.comun.MontoGrande
@@ -67,7 +69,7 @@ import com.entredos.data.repository.PeriodoRepositorio
 import com.entredos.ui.comun.CampoMonto
 import com.entredos.ui.comun.PALETA
 import com.entredos.ui.comun.SelectorColor
-import com.entredos.ui.teclado.colorDe
+import com.entredos.ui.comun.colorDe
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -109,46 +111,39 @@ class PresupuestoViewModel @Inject constructor(
     fun eliminar(c: CategoriaEntity, listo: () -> Unit) { viewModelScope.launch { repo.eliminar(c); listo() } }
 }
 
-/** [alVerCategoria] abre Movimientos filtrado (null = todos los gastos del periodo). */
+/** Hogar › Categorías y topes: crear, editar y eliminar categorías. */
 @Composable
-fun PantallaPresupuesto(alVerCategoria: (String?) -> Unit, vm: PresupuestoViewModel = hiltViewModel()) {
+fun PantallaCategorias(alVolver: () -> Unit, vm: PresupuestoViewModel = hiltViewModel()) {
     val e by vm.estado.collectAsState()
     var editando by remember { mutableStateOf<CategoriaEntity?>(null) }
     var creando by remember { mutableStateOf(false) }
-    val p = e.periodo
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoVolver("Categorías y topes", "Lo asignado vale para todos los meses hasta que lo cambies", alVolver) },
         floatingActionButton = { if (e.categorias.isNotEmpty()) FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nueva categoría") } },
     ) { margen ->
-        LazyColumn(Modifier.fillMaxSize().padding(margen), contentPadding = PaddingValues(bottom = 96.dp)) {
-            item { TituloPantalla("Presupuesto", "Lo asignado vale para todos los periodos hasta que lo cambies") }
-            if (e.categorias.isEmpty()) {
-                item {
-                    EstadoVacio(
-                        Icons.Default.Category, "Crea tus categorías",
-                        "Mercado, arriendo, transporte… Cada una puede ser compartida o de uno de los dos, con tope o sin tope.",
-                        "Crear categoría",
-                    ) { creando = true }
-                }
-            } else {
-                item {
-                    Tarjeta(Modifier.padding(horizontal = MARGEN, vertical = 6.dp), alTocar = { alVerCategoria(null) }) {
-                        MontoGrande(
-                            if (p.disponible >= 0) "Disponible del periodo" else "Se pasaron",
-                            kotlin.math.abs(p.disponible),
-                            "Gastado ${FormatoPesos.pesos(p.gastado)} de ${FormatoPesos.pesos(p.asignado)} asignados",
-                        )
-                        if (p.asignado > 0) BarraProgreso(p.gastado.toFloat() / p.asignado, excedida = p.disponible < 0)
-                    }
-                }
-                item {
-                    Tarjeta(Modifier.padding(horizontal = MARGEN, vertical = 6.dp)) {
-                        e.categorias.forEach { c ->
-                            FilaCategoria(c.nombre, c.color, p.porCategoria[c.id]?.gastado ?: 0, c.presupuesto, alTocar = { alVerCategoria(c.id) }) {
-                                IconButton(onClick = { editando = c }) { Icon(Icons.Default.Edit, "Editar ${c.nombre}", tint = MaterialTheme.colorScheme.outline) }
+        LazyColumn(Modifier.fillMaxSize().padding(margen), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp)) {
+            if (e.categorias.isEmpty()) item {
+                EstadoVacio(
+                    Icons.Default.Category, "Crea sus categorías",
+                    "Mercado, arriendo, transporte… Cada una puede ser compartida o de uno de los dos, con tope o sin tope.",
+                    "Crear categoría",
+                ) { creando = true }
+            } else item {
+                Tarjeta(contenidoPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
+                    e.categorias.forEachIndexed { i, c ->
+                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                        Row(
+                            Modifier.fillMaxWidth().clickable { editando = c }.padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Box(Modifier.size(12.dp).background(colorDe(c.color), CircleShape))
+                            Column(Modifier.weight(1f)) {
+                                Text(c.nombre, style = MaterialTheme.typography.bodyLarge)
+                                Text(responsableTexto(c.responsable, e.miembros), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text(responsableTexto(c.responsable, e.miembros), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 22.dp, bottom = 6.dp))
+                            Text(c.presupuesto?.let { FormatoPesos.pesos(it) } ?: "Sin tope", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

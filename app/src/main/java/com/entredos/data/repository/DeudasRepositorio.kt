@@ -47,6 +47,13 @@ class DeudasRepositorio @Inject constructor(
         }
     }
 
+    /** "Registrar un pago": [deudor] le paga [monto] a su pareja; se abona a sus deudas de la más vieja a la más nueva. */
+    suspend fun registrarPago(deudas: List<Deuda>, deudor: Miembro, monto: Long, fecha: Long) = db.withTransaction {
+        CalculadoraDeudas.repartirPago(deudas, deudor, monto).forEach { (id, abono) ->
+            escritor.guardar(Tablas.ABONO, AbonoEntity(deudaId = id, monto = abono, fecha = fecha))
+        }
+    }
+
     suspend fun agregarManual(deudor: Miembro, monto: Long, concepto: String, fecha: Long, categoriaId: String? = null) {
         require(monto > 0) { "El monto debe ser mayor que cero" }
         escritor.guardar(

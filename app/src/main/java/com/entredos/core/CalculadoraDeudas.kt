@@ -114,4 +114,22 @@ object CalculadoraDeudas {
     /** Abonos necesarios para dejar todo saldado (al cerrar un periodo o con "Saldar todo"). */
     fun abonosParaSaldarTodo(deudas: List<Deuda>): Map<String, Long> =
         deudas.filter { !it.saldada }.associate { it.id to it.pendiente }
+
+    /**
+     * "Registrar un pago": [deudor] le paga [monto] a su pareja. Se reparte entre sus deudas
+     * abiertas, de la más vieja a la más nueva. Devuelve id de deuda → monto del abono.
+     * Lo que sobre (si paga más de lo que debe) no se usa.
+     */
+    fun repartirPago(deudas: List<Deuda>, deudor: Miembro, monto: Long): Map<String, Long> {
+        require(monto > 0) { "El pago debe ser mayor que cero" }
+        var queda = monto
+        val abonos = linkedMapOf<String, Long>()
+        for (d in deudas.filter { !it.saldada && it.deudor == deudor }.sortedBy { it.fecha }) {
+            if (queda == 0L) break
+            val abono = minOf(queda, d.pendiente)
+            abonos[d.id] = abono
+            queda -= abono
+        }
+        return abonos
+    }
 }

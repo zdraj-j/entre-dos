@@ -10,9 +10,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,25 +21,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.entredos.core.Miembro
+import com.entredos.BuildConfig
 import com.entredos.core.ModoPeriodo
-import com.entredos.data.importacion.nombreTitular
+import com.entredos.data.local.Ajustes
+import com.entredos.data.local.AjustesLocales
 import com.entredos.data.local.EntreDosDatabase
+import com.entredos.data.local.entity.HogarEntity
 import com.entredos.data.repository.ExportacionRepositorio
 import com.entredos.data.repository.HogarRepositorio
-import com.entredos.ui.comun.Dato
-import com.entredos.ui.comun.MARGEN
-import com.entredos.ui.comun.Tarjeta
-import com.entredos.ui.comun.TituloPantalla
-import com.entredos.ui.comun.Seccion
+import com.entredos.data.sync.CambiosSinSubir
+import com.entredos.data.sync.Estado
+import com.entredos.data.sync.EstadoSync
+import com.entredos.data.sync.ServicioHogar
+import com.entredos.data.sync.Sincronizador
+import com.entredos.data.wifi.EstadoWifi
+import com.entredos.data.wifi.SincronizacionWifi
+import com.entredos.ui.comun.EncabezadoVolver
+import com.entredos.ui.comun.FilaAjuste
+import com.entredos.ui.comun.GrupoAjustes
 import com.entredos.ui.comun.recordarGuardado
-import com.entredos.ui.hogar.SeccionSincronizacion
 import com.entredos.ui.permisos.Permisos
 import com.entredos.ui.permisos.recordarPermisos
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,113 +55,194 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 import javax.inject.Inject
+
+data class EstadoAjustes(
+    val hogar: HogarEntity? = null,
+    val locales: Ajustes = Ajustes(),
+    val sync: Estado = Estado(),
+    val sinSubir: Int = 0,
+    val reglas: Int = 0,
+    val wifi: EstadoWifi = EstadoWifi(),
+)
 
 @HiltViewModel
 class AjustesViewModel @Inject constructor(
     db: EntreDosDatabase,
+    private val ajustesLocales: AjustesLocales,
+    estadoSync: EstadoSync,
+    wifi: SincronizacionWifi,
     private val hogar: HogarRepositorio,
     private val exportacion: ExportacionRepositorio,
+    private val sincronizador: Sincronizador,
+    private val servicioHogar: ServicioHogar,
 ) : ViewModel() {
-    val estado = combine(db.hogarDao().observar(), db.miembroDao().observar(), db.dispositivoDao().observar()) { h, m, d -> Triple(h, m, d?.miembro) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Triple(null, emptyList(), null))
-    val mensaje = MutableStateFlow<String?>(null)
 
-    fun guardarHogar(nombre: String, dia: Int, modo: ModoPeriodo) = viewModelScope.launch {
-        runCatching { hogar.guardar(nombre, dia, modo) }.onFailure { mensaje.value = it.message }
-    }
-    fun renombrar(m: Miembro, nombre: String) = viewModelScope.launch { runCatching { hogar.renombrar(m, nombre) }.onFailure { mensaje.value = it.message } }
+    val estado = combine(
+        combine(db.hogarDao().observar(), ajustesLocales.ajustes, estadoSync.estado) { h, a, s -> Triple(h, a, s) },
+        db.cambioPendienteDao().contar(), db.reglaComercioDao().observar(), wifi.estado,
+    ) { (h, a, s), sinSubir, reglas, w -> EstadoAjustes(h, a, s, sinSubir, reglas.size, w) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), EstadoAjustes())
+
+    val mensaje = MutableStateFlow<String?>(null)
+    /** Cambios que se perderían al salir; null si no hay aviso. */
+    val avisoSalir = MutableStateFlow<Int?>(null)
+
+    fun guardarMes(dia: Int, modo: ModoPeriodo) = hacer { hogar.guardar(estado.value.hogar?.nombre ?: "", dia, modo) }
+    fun renombrarHogar(nombre: String) = hacer { estado.value.hogar?.let { hogar.guardar(nombre, it.diaInicio, it.modoPeriodo) } }
+    fun clasificacionManual(activo: Boolean) = ajustesLocales.clasificacionManual(activo)
+    fun wifi(activo: Boolean) = ajustesLocales.wifi(activo)
+    fun sincronizarAhora() = hacer { sincronizador.sincronizar() }
     suspend fun respaldo() = exportacion.respaldo()
+
+    fun salir(forzar: Boolean) = hacer {
+        try { servicioHogar.salir(forzar); avisoSalir.value = null } catch (e: CambiosSinSubir) { avisoSalir.value = e.cuantos }
+    }
+
+    private fun hacer(accion: suspend () -> Unit) {
+        viewModelScope.launch { runCatching { accion() }.onFailure { mensaje.value = it.message } }
+    }
 }
 
+/** Hogar › Ajustes. */
 @Composable
 fun PantallaAjustes(
-    alImportaciones: () -> Unit, alDeteccion: () -> Unit, alDiagnostico: () -> Unit,
-    alReconectar: () -> Unit, alSalir: () -> Unit,
+    alVolver: () -> Unit, alReglas: () -> Unit, alOtrasApps: () -> Unit, alImportar: () -> Unit, alDiagnostico: () -> Unit, alReconectar: () -> Unit,
     vm: AjustesViewModel = hiltViewModel(),
 ) {
-    val (hogar, miembros, yo) = vm.estado.collectAsState().value
+    val e by vm.estado.collectAsState()
     val mensaje by vm.mensaje.collectAsState()
+    val aviso by vm.avisoSalir.collectAsState()
     val permisos = recordarPermisos()
-    val c = LocalContext.current
+    val contexto = LocalContext.current
     val guardarZip = recordarGuardado("application/zip")
-    var editandoHogar by remember { mutableStateOf(false) }
-    var renombrando by remember { mutableStateOf<Miembro?>(null) }
+    var editandoMes by remember { mutableStateOf(false) }
+    var editandoNombre by remember { mutableStateOf(false) }
+    var confirmarSalir by remember { mutableStateOf(false) }
+    val todoActivo = permisos.notificaciones && permisos.bateria && permisos.avisos
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-        TituloPantalla("Ajustes", hogar?.nombre)
-        Column(Modifier.padding(horizontal = MARGEN)) {
-        mensaje?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        Seccion("Hogar") {
-            Dato("Nombre", hogar?.nombre ?: "—", alTocar = { editandoHogar = true })
-            Miembro.entries.forEach { m ->
-                val etiqueta = if (m == yo) "Tú" else "Tu pareja"
-                val existe = miembros.any { it.id == m.name }
-                Dato(etiqueta, if (existe) nombreTitular(miembros, m) else "Aún no se ha unido", alTocar = if (existe) ({ renombrando = m }) else null)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        EncabezadoVolver("Ajustes", alVolver = alVolver)
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            mensaje?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+            GrupoAjustes("El mes", listOf(
+                { FilaAjuste("Nombre del hogar", valor = e.hogar?.nombre ?: "", alTocar = { editandoNombre = true }) },
+                { FilaAjuste("Día en que empieza", valor = "${e.hogar?.diaInicio ?: 1}", alTocar = { editandoMes = true }) },
+                {
+                    FilaAjuste(
+                        "Cierre del mes", valor = if (e.hogar?.modoPeriodo == ModoPeriodo.AUTOMATICO) "Automático" else "Manual",
+                        ayuda = if (e.hogar?.modoPeriodo == ModoPeriodo.AUTOMATICO) "Se archiva solo el día de inicio" else "Lo cierran ustedes desde Mes",
+                        alTocar = { editandoMes = true },
+                    )
+                },
+            ))
+
+            GrupoAjustes("Gastos detectados", listOf(
+                {
+                    FilaAjuste(
+                        "Elegir siempre la categoría", ayuda = "Si está apagado, la app aprende y clasifica sola",
+                        control = { Switch(e.locales.clasificacionManual, vm::clasificacionManual) },
+                    )
+                },
+                { FilaAjuste("Reglas aprendidas", valor = "${e.reglas}", alTocar = alReglas) },
+                { FilaAjuste("Leer otras apps", valor = if (e.locales.lectorGenericoActivo) "${e.locales.appsGenericas.size} apps" else "Apagado", alTocar = alOtrasApps) },
+            ))
+
+            GrupoAjustes("Sincronización", listOf(
+                {
+                    FilaAjuste(
+                        "Cuenta del hogar", ayuda = if (e.sync.requiereInicio) "El permiso venció: toca para volver a conectar" else e.sync.correo,
+                        alTocar = alReconectar,
+                    )
+                },
+                {
+                    FilaAjuste(
+                        "Estado",
+                        ayuda = e.sync.ultimoError ?: e.sync.ultimaSyncOk?.let { "Última vez: " + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it)) },
+                        valor = when { e.sync.ultimoError != null -> "Con error"; e.sinSubir > 0 -> "${e.sinSubir} sin subir"; else -> "Al día" },
+                        alTocar = vm::sincronizarAhora,
+                    )
+                },
+                {
+                    FilaAjuste(
+                        "Wifi en casa",
+                        ayuda = when {
+                            !e.locales.wifiActivo -> "Se pasan los cambios sin internet, con la app abierta"
+                            e.wifi.parejaVisible -> "El otro teléfono está en la red"
+                            e.wifi.error != null -> e.wifi.error
+                            else -> "Buscando el otro teléfono…"
+                        },
+                        control = { Switch(e.locales.wifiActivo, vm::wifi) },
+                    )
+                },
+            ))
+
+            GrupoAjustes("Datos", listOf(
+                { FilaAjuste("Importar", ayuda = "Desde otra app o un respaldo", alTocar = alImportar) },
+                { FilaAjuste("Exportar respaldo", ayuda = "Un .zip que también se puede importar", alTocar = { guardarZip("respaldo-entre-dos.zip") { vm.respaldo().bytes } }) },
+                { FilaAjuste("Permisos", valor = if (todoActivo) "Todo activo" else "Falta alguno", alTocar = { if (!permisos.notificaciones) Permisos.abrirAccesoNotificaciones(contexto) else if (!permisos.bateria) Permisos.pedirSinOptimizacion(contexto) }) },
+                { FilaAjuste("Diagnóstico", alTocar = alDiagnostico) },
+            ))
+
+            TextButton(onClick = { confirmarSalir = true }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Text("Salir del hogar", color = MaterialTheme.colorScheme.error)
             }
-            Dato("Día de inicio del periodo", "${hogar?.diaInicio ?: "—"}", alTocar = { editandoHogar = true })
-            Dato("Modo del periodo", if (hogar?.modoPeriodo == ModoPeriodo.AUTOMATICO) "Automático" else "Manual", alTocar = { editandoHogar = true })
-            Text("Para que tu pareja se una, conecta en su teléfono la misma cuenta de Google del hogar.", style = MaterialTheme.typography.bodySmall)
-        }
-        Seccion("Clasificación de gastos") {
-            SeccionClasificacion()
-            Dato("Detección y reglas", "", alTocar = alDeteccion)
-        }
-        Seccion("Deudas") {
-            Text("Categoría de una persona pagada por la otra: el dueño debe todo. Categoría compartida: quien no pagó debe la mitad, o lo que se haya ajustado. Los gastos importados no generan deuda.", style = MaterialTheme.typography.bodySmall)
-        }
-        Seccion("Permisos") {
-            Dato("Acceso a notificaciones", if (permisos.notificaciones) "Activo" else "Falta", alTocar = { Permisos.abrirAccesoNotificaciones(c) })
-            Dato("Sin optimización de batería", if (permisos.bateria) "Activo" else "Falta", alTocar = { Permisos.pedirSinOptimizacion(c) })
-            Dato("Avisos de la app", if (permisos.avisos) "Activo" else "Falta")
-        }
-        Tarjeta(Modifier.padding(vertical = 6.dp)) { SeccionSincronizacion(alReconectar = alReconectar, alSalir = alSalir) }
-        Tarjeta(Modifier.padding(vertical = 6.dp)) { SeccionWifi() }
-        Seccion("Datos") {
-            Dato("Importar y deshacer importaciones", "", alTocar = alImportaciones)
-            Dato("Exportar respaldo (.zip)", "", alTocar = { guardarZip("respaldo-entre-dos.zip") { vm.respaldo().bytes } })
-            Text("El respaldo usa el mismo formato del importador: sirve para guardar una copia o pasar los datos a otro hogar.", style = MaterialTheme.typography.bodySmall)
-            Dato("Diagnóstico", "", alTocar = alDiagnostico)
-        }
-        Text("Entre dos ${com.entredos.BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 12.dp))
+            Text("Entre dos ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 
-    if (editandoHogar && hogar != null) {
-        var nombre by remember { mutableStateOf(hogar.nombre) }
-        var dia by remember { mutableStateOf(hogar.diaInicio.toString()) }
-        var modo by remember { mutableStateOf(hogar.modoPeriodo) }
+    if (editandoMes && e.hogar != null) {
+        var dia by remember { mutableStateOf(e.hogar!!.diaInicio.toString()) }
+        var modo by remember { mutableStateOf(e.hogar!!.modoPeriodo) }
         val diaValido = dia.toIntOrNull()?.let { it in 1..28 } == true
         AlertDialog(
-            onDismissRequest = { editandoHogar = false },
-            title = { Text("Hogar") },
+            onDismissRequest = { editandoMes = false },
+            title = { Text("El mes") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(nombre, { nombre = it.take(40) }, label = { Text("Nombre del hogar") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(dia, { dia = it.filter(Char::isDigit).take(2) }, label = { Text("Día de inicio (1 a 28)") }, isError = !diaValido, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(dia, { dia = it.filter(Char::isDigit).take(2) }, label = { Text("Día en que empieza (1 a 28)") }, isError = !diaValido, singleLine = true, modifier = Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(modo == ModoPeriodo.MANUAL, { modo = ModoPeriodo.MANUAL }, { Text("Manual") })
                         FilterChip(modo == ModoPeriodo.AUTOMATICO, { modo = ModoPeriodo.AUTOMATICO }, { Text("Automático") })
                     }
                     Text(
-                        if (modo == ModoPeriodo.MANUAL) "El periodo termina solo cuando alguno toca \"Cerrar y archivar\"."
-                        else "El periodo se archiva solo el día de inicio de cada mes; las deudas siguen abiertas.",
+                        if (modo == ModoPeriodo.MANUAL) "El mes termina cuando alguno de los dos toca \"Cerrar el mes\"."
+                        else "El mes se archiva solo el día de inicio; las deudas siguen abiertas.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
             },
-            confirmButton = { TextButton(onClick = { vm.guardarHogar(nombre, dia.toInt(), modo); editandoHogar = false }, enabled = diaValido) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { editandoHogar = false }) { Text("Cancelar") } },
+            confirmButton = { TextButton(onClick = { vm.guardarMes(dia.toInt(), modo); editandoMes = false }, enabled = diaValido) { Text("Guardar") } },
+            dismissButton = { TextButton(onClick = { editandoMes = false }) { Text("Cancelar") } },
         )
     }
-    renombrando?.let { m ->
-        var nombre by remember { mutableStateOf(nombreTitular(miembros, m)) }
+    if (editandoNombre && e.hogar != null) {
+        var nombre by remember { mutableStateOf(e.hogar!!.nombre) }
         AlertDialog(
-            onDismissRequest = { renombrando = null },
-            title = { Text("Cambiar nombre") },
-            text = { OutlinedTextField(nombre, { nombre = it.take(40) }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
-            confirmButton = { TextButton(onClick = { vm.renombrar(m, nombre); renombrando = null }, enabled = nombre.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrando = null }) { Text("Cancelar") } },
+            onDismissRequest = { editandoNombre = false },
+            title = { Text("Nombre del hogar") },
+            text = { OutlinedTextField(nombre, { nombre = it.take(40) }, singleLine = true) },
+            confirmButton = { TextButton(onClick = { vm.renombrarHogar(nombre); editandoNombre = false }, enabled = nombre.isNotBlank()) { Text("Guardar") } },
+            dismissButton = { TextButton(onClick = { editandoNombre = false }) { Text("Cancelar") } },
+        )
+    }
+    if (confirmarSalir) AlertDialog(
+        onDismissRequest = { confirmarSalir = false },
+        title = { Text("¿Salir del hogar?") },
+        text = { Text("Se borra todo de este teléfono. Los datos siguen en la cuenta del hogar: para volver, conectas la cuenta y tocas \"Soy …\".") },
+        confirmButton = { TextButton(onClick = { vm.salir(forzar = false); confirmarSalir = false }) { Text("Salir", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(onClick = { confirmarSalir = false }) { Text("Cancelar") } },
+    )
+    aviso?.let { n ->
+        AlertDialog(
+            onDismissRequest = { vm.avisoSalir.value = null },
+            title = { Text("Hay cambios sin subir") },
+            text = { Text("$n cambios aún no llegan a la cuenta del hogar. Si sales ahora se pierden. Conéctate a internet y espera a que diga \"Al día\".") },
+            confirmButton = { TextButton(onClick = { vm.salir(forzar = true) }) { Text("Salir igual", color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { vm.avisoSalir.value = null }) { Text("Cancelar") } },
         )
     }
 }

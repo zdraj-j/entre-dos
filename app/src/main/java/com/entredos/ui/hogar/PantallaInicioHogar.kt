@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Column
@@ -59,22 +59,23 @@ fun PantallaInicioHogar(alTerminar: () -> Unit, vm: InicioHogarViewModel = hiltV
     }
 
     Column(
-        Modifier.fillMaxSize().padding(24.dp),
+        Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
     ) {
         when (val p = paso) {
             PasoInicio.Bienvenida, is PasoInicio.AbrirGoogle -> {
-                Box(
-                    Modifier.size(88.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape).align(Alignment.CenterHorizontally),
-                    contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp)) }
-                Text("Entre dos", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterHorizontally))
-                Text(
-                    "El presupuesto de la casa, claro para los dos. Conecta la cuenta de Google del hogar: es la misma en los dos teléfonos y ahí se guardan los datos, en una carpeta que solo ve esta app.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
-                )
-                Button(onClick = vm::conectar, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Conectar cuenta del hogar") }
-                Text("¿Es tu primera vez? Crea primero la cuenta de Gmail del hogar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Column(Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterVertically)) {
+                    LogoEntreDos()
+                    Text("Entre dos", style = MaterialTheme.typography.displaySmall)
+                    Text("El presupuesto de la casa, claro para los dos.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    PuntoBienvenida("Los gastos del banco se anotan solos")
+                    PuntoBienvenida("Saben cuánto les queda en el mes")
+                    PuntoBienvenida("Saben quién le debe a quién")
+                }
+                Button(onClick = vm::conectar, modifier = Modifier.fillMaxWidth().height(54.dp)) { Text("Conectar la cuenta del hogar") }
+                Text("Es una cuenta de Google que comparten los dos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
             is PasoInicio.Cargando -> {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
@@ -123,5 +124,31 @@ private fun FormularioUnirse(unirse: (String) -> Unit) {
     OutlinedTextField(nombre, { nombre = it }, label = { Text("Tu nombre") }, modifier = Modifier.fillMaxWidth())
     OutlinedButton(onClick = { unirse(nombre) }, enabled = nombre.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
         Text("Unirme al hogar")
+    }
+}
+
+
+/** Dos círculos que se cruzan: dos personas, una cuenta. */
+@Composable
+private fun LogoEntreDos() {
+    val acento = MaterialTheme.colorScheme.primary
+    val relleno = MaterialTheme.colorScheme.primaryContainer
+    androidx.compose.foundation.Canvas(Modifier.size(width = 120.dp, height = 84.dp)) {
+        val r = size.height / 2 - 3.dp.toPx()
+        val izquierda = androidx.compose.ui.geometry.Offset(size.width / 2 - r / 2, size.height / 2)
+        val derecha = androidx.compose.ui.geometry.Offset(size.width / 2 + r / 2, size.height / 2)
+        drawCircle(relleno, r, izquierda); drawCircle(relleno, r, derecha)
+        val trazo = androidx.compose.ui.graphics.drawscope.Stroke(6.dp.toPx())
+        drawCircle(acento, r, izquierda, style = trazo); drawCircle(acento, r, derecha, style = trazo)
+    }
+}
+
+@Composable
+private fun PuntoBienvenida(texto: String) {
+    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(androidx.compose.material.icons.Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+        }
+        Text(texto, style = MaterialTheme.typography.bodyLarge)
     }
 }

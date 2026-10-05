@@ -212,7 +212,7 @@ class ImportadorRepositorio @Inject constructor(
     }
 
     private companion object {
-        val PALETA = listOf("#2E7D5B", "#3A5BA0", "#C77A12", "#B4472B", "#6B4FA0", "#1F8A8A", "#8A5A2E", "#A23B72", "#4F6D2E", "#5C6670")
+        val PALETA = listOf("#2E7D5B", "#3A5BA0", "#C77A12", "#B4472B", "#8A5A2E", "#1F8A8A", "#A23B72", "#4F6D2E", "#5C6670", "#B08A1E")
     }
 }
 

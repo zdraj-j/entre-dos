@@ -54,12 +54,12 @@ interface WidgetEntryPoint {
 }
 
 /** Colores fijos del boceto, con versión clara y oscura. */
-private val Fondo = ColorProvider(day = Color(0xFFFFFFFF), night = Color(0xFF18201C))
-private val Tinta = ColorProvider(day = Color(0xFF142019), night = Color(0xFFE0E6E2))
-private val Suave = ColorProvider(day = Color(0xFF4E5A53), night = Color(0xFFB4C0B9))
-private val Verde = ColorProvider(day = Color(0xFF1B6B4A), night = Color(0xFF8FD9B6))
-private val SobreVerde = ColorProvider(day = Color(0xFFFFFFFF), night = Color(0xFF003824))
-private val Alerta = ColorProvider(day = Color(0xFFA4410E), night = Color(0xFFFFB59A))
+private val Fondo = ColorProvider(day = Color(0xFFFFFFFF), night = Color(0xFF1F1C26))
+private val Tinta = ColorProvider(day = Color(0xFF1C1A24), night = Color(0xFFECE9F3))
+private val Suave = ColorProvider(day = Color(0xFF5E5A6B), night = Color(0xFFB4AFC2))
+private val Acento = ColorProvider(day = Color(0xFF5B3FB0), night = Color(0xFFB9A3FF))
+private val SobreAcento = ColorProvider(day = Color(0xFFFFFFFF), night = Color(0xFF1C1433))
+private val Alerta = ColorProvider(day = Color(0xFFB5541C), night = Color(0xFFFFB08A))
 
 /**
  * Widget de inicio: lo disponible del periodo, lo gastado hoy, los pendientes por clasificar
@@ -88,7 +88,7 @@ class WidgetEntreDos : GlanceAppWidget() {
                 return@Column
             }
             Text(
-                if (d.disponible >= 0) "Disponible" else "Se pasaron",
+                if (d.disponible >= 0) "Quedan" else "Se pasaron",
                 style = TextStyle(color = Suave, fontSize = 12.sp),
             )
             Text(
@@ -96,16 +96,16 @@ class WidgetEntreDos : GlanceAppWidget() {
                 style = TextStyle(color = if (d.disponible >= 0) Tinta else Alerta, fontSize = 24.sp, fontWeight = FontWeight.Bold),
             )
             Text(
-                "Hoy: ${FormatoPesos.pesos(d.gastadoHoy)}" + if (d.pendientes > 0) " · ${d.pendientes} por clasificar" else "",
+                "Hoy: ${FormatoPesos.pesos(d.gastadoHoy)}" + if (d.pendientes > 0) " · ${d.pendientes} por confirmar" else "",
                 style = TextStyle(color = if (d.pendientes > 0) Alerta else Suave, fontSize = 12.sp),
             )
             Spacer(GlanceModifier.height(10.dp))
             Box(
-                GlanceModifier.fillMaxWidth().background(Verde).cornerRadius(14.dp).padding(vertical = 10.dp).clickable(abrir),
+                GlanceModifier.fillMaxWidth().background(Acento).cornerRadius(14.dp).padding(vertical = 10.dp).clickable(abrir),
                 contentAlignment = Alignment.Center,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("+  Nuevo gasto", style = TextStyle(color = SobreVerde, fontSize = 15.sp, fontWeight = FontWeight.Bold))
+                    Text("+  Nuevo gasto", style = TextStyle(color = SobreAcento, fontSize = 15.sp, fontWeight = FontWeight.Bold))
                 }
             }
         }

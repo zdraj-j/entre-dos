@@ -47,7 +47,7 @@ import com.entredos.data.importacion.nombreTitular
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/** Ajustes › Importar datos. [alTerminar] vuelve a Ajustes; [alVerMovimientos] abre Movimientos en "Todos". */
+/** Hogar › Ajustes › Importar. [alTerminar] vuelve; [alVerMovimientos] abre la pestaña Gastos. */
 @Composable
 fun PantallaImportar(alTerminar: () -> Unit, alVerMovimientos: () -> Unit, vm: ImportarViewModel = hiltViewModel()) {
     val paso by vm.paso.collectAsState()
@@ -75,7 +75,7 @@ fun PantallaImportar(alTerminar: () -> Unit, alVerMovimientos: () -> Unit, vm: I
                 Text("Se importaron ${r.lote.gastos} gastos, ${r.lote.categorias} categorías nuevas y ${r.lote.deudas} deudas. " +
                     "También se crearon ${r.periodos} periodos anteriores y ${r.reglas} reglas de comercio.")
                 Text("Si algo no quedó bien, puedes deshacer esta importación desde Ajustes › Importaciones.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Button(onClick = alVerMovimientos) { Text("Ver en Movimientos") }
+                Button(onClick = alVerMovimientos) { Text("Ver en Gastos") }
                 TextButton(onClick = alTerminar) { Text("Cerrar") }
             }
             is PasoImportar.Error -> {

@@ -1,7 +1,7 @@
 # Configuración de la cuenta de Google y de Google Cloud
 
-La guía completa, con capturas de los pasos y solución de problemas, está en el documento
-"Entre dos — Cuenta de Google y exportación desde la otra app". Este es el resumen.
+La guía completa, con solución de problemas, está en el documento "Entre dos — Cuenta de Google y
+exportación desde la otra app". Este es el resumen.
 
 ## Cuenta del hogar
 
@@ -26,5 +26,6 @@ No hay archivo que copiar al proyecto: Google reconoce la app por paquete y firm
 - Teléfono 1: Conectar cuenta del hogar › Crear hogar.
 - Teléfono 2: la misma cuenta › Unirme al hogar.
 - Reinstalar: la misma cuenta › "Soy …".
+- Ver el estado: Hogar › Ajustes › Sincronización.
 
 No borres los "datos ocultos de la app" en la configuración de Drive: ahí está todo el historial.
