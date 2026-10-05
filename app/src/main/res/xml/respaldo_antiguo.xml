@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 o inferior. -->
+<full-backup-content>
+    <exclude domain="database" path="entre_dos.db" />
+    <exclude domain="database" path="entre_dos.db-wal" />
+    <exclude domain="database" path="entre_dos.db-shm" />
+</full-backup-content>
