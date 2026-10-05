@@ -9,6 +9,7 @@ import androidx.room.Relation
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.entredos.core.DeudaManualInfo
+import com.entredos.core.ParteEnPeriodo
 import com.entredos.core.ParteParaDeuda
 import com.entredos.data.local.entity.AbonoEntity
 import com.entredos.data.local.entity.ArchivoAplicadoEntity
@@ -130,7 +131,27 @@ interface ParteGastoDao {
              AND g.estado = 'CONFIRMADO' AND g.tipo = 'GASTO'"""
     )
     fun observarParaDeudas(): Flow<List<ParteParaDeuda>>
+
+    /** Lo gastado por categoría desde [desde]: gastos confirmados de tipo GASTO. */
+    @Query(
+        """SELECT p.categoriaId AS categoriaId, p.monto AS monto
+           FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
+           WHERE p.sync_eliminado = 0 AND g.sync_eliminado = 0
+             AND g.estado = 'CONFIRMADO' AND g.tipo = 'GASTO' AND g.fecha >= :desde"""
+    )
+    fun observarPartesDesde(desde: Long): Flow<List<ParteEnPeriodo>>
+
+    /** Cuántas veces se usó cada categoría desde [desde], para ordenar el teclado. */
+    @Query(
+        """SELECT p.categoriaId AS categoriaId, COUNT(*) AS veces
+           FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
+           WHERE p.sync_eliminado = 0 AND g.sync_eliminado = 0 AND g.estado = 'CONFIRMADO' AND g.fecha >= :desde
+           GROUP BY p.categoriaId"""
+    )
+    fun observarUso(desde: Long): Flow<List<UsoCategoria>>
 }
+
+data class UsoCategoria(val categoriaId: String, val veces: Int)
 
 @Dao
 interface DeudaManualDao {
@@ -214,6 +235,8 @@ interface ReglaComercioDao {
     @Query("SELECT * FROM regla_comercio WHERE id = :id") suspend fun porId(id: String): ReglaComercioEntity?
     @Query("SELECT * FROM regla_comercio WHERE sync_eliminado = 0 ORDER BY palabra") fun observar(): Flow<List<ReglaComercioEntity>>
     @Query("SELECT * FROM regla_comercio WHERE sync_eliminado = 0") suspend fun todas(): List<ReglaComercioEntity>
+    @Query("SELECT * FROM regla_comercio WHERE palabra = :palabra AND sync_eliminado = 0 LIMIT 1")
+    suspend fun porPalabra(palabra: String): ReglaComercioEntity?
 }
 
 @Dao

@@ -60,6 +60,9 @@ object Reparto {
         else -> null
     }
 
+    /** En "Ajustar montos", la última parte se calcula sola con lo que falta. */
+    fun completarUltima(total: Long, primeras: List<Long>): Long = total - primeras.sum()
+
     private fun armar(pagadoPor: Miembro, cargoPagador: Long, cargoOtro: Long): Cargos =
         if (pagadoPor == Miembro.A) Cargos(cargoPagador, cargoOtro) else Cargos(cargoOtro, cargoPagador)
 }
