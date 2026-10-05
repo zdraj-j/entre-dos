@@ -1,0 +1,5 @@
+Date;Amount;Category;Note;Type
+05/09/2026;-45.900;Comida;Almuerzo;Expense
+13/09/2026;2.500.000;Salario;Pago;Income
+14/09/2026;-12.000;Transporte;Taxi;Expense
+15/09/2026;-500.000;;Al ahorro;Transfer

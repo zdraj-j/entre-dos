@@ -10,6 +10,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import com.entredos.core.DeudaManualInfo
 import com.entredos.core.ParteEnPeriodo
+import com.entredos.core.importacion.HuellaGasto
 import com.entredos.core.ParteParaDeuda
 import com.entredos.data.local.entity.AbonoEntity
 import com.entredos.data.local.entity.ArchivoAplicadoEntity
@@ -58,6 +59,7 @@ interface MiembroDao {
 
 @Dao
 interface CategoriaDao {
+    @Query("SELECT * FROM categoria WHERE loteImportacion = :lote AND sync_eliminado = 0") suspend fun porLote(lote: String): List<CategoriaEntity>
     @Upsert suspend fun upsert(e: CategoriaEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM categoria") suspend fun todosConEliminados(): List<CategoriaEntity>
@@ -77,6 +79,9 @@ data class GastoConPartes(
 
 @Dao
 interface GastoDao {
+    /** Para detectar posibles duplicados al importar gastos sin id_origen. */
+    @Query("SELECT fecha, monto, COALESCE(comercio, nombre) AS texto FROM gasto WHERE sync_eliminado = 0 AND estado != 'IGNORADO'")
+    suspend fun huellas(): List<HuellaGasto>
     @Upsert suspend fun upsert(e: GastoEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM gasto") suspend fun todosConEliminados(): List<GastoEntity>
@@ -114,6 +119,13 @@ interface GastoDao {
 
 @Dao
 interface ParteGastoDao {
+    /** Partes de gastos que NO son del lote: si hay, la categoría importada se conserva al deshacer. */
+    @Query(
+        """SELECT COUNT(*) FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
+           WHERE p.categoriaId = :categoriaId AND p.sync_eliminado = 0 AND g.sync_eliminado = 0
+             AND (g.loteImportacion IS NULL OR g.loteImportacion != :lote)"""
+    )
+    suspend fun usosFueraDelLote(categoriaId: String, lote: String): Int
     @Upsert suspend fun upsert(e: ParteGastoEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM parte_gasto") suspend fun todosConEliminados(): List<ParteGastoEntity>
@@ -155,6 +167,8 @@ data class UsoCategoria(val categoriaId: String, val veces: Int)
 
 @Dao
 interface DeudaManualDao {
+    @Query("SELECT idOrigen FROM deuda_manual WHERE idOrigen IS NOT NULL AND sync_eliminado = 0") suspend fun idsOrigen(): List<String>
+    @Query("SELECT * FROM deuda_manual WHERE loteImportacion = :lote AND sync_eliminado = 0") suspend fun porLote(lote: String): List<DeudaManualEntity>
     @Upsert suspend fun upsert(e: DeudaManualEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM deuda_manual") suspend fun todosConEliminados(): List<DeudaManualEntity>
@@ -165,6 +179,8 @@ interface DeudaManualDao {
     )
     fun observarParaDeudas(): Flow<List<DeudaManualInfo>>
 }
+
+data class RangoPeriodo(val inicio: Long, val fin: Long)
 
 data class AbonoTotal(val deudaId: String, val total: Long)
 
@@ -184,6 +200,8 @@ interface AbonoDao {
 
 @Dao
 interface PeriodoCerradoDao {
+    @Query("SELECT inicio, fin FROM periodo_cerrado WHERE sync_eliminado = 0") suspend fun rangos(): List<RangoPeriodo>
+    @Query("SELECT * FROM periodo_cerrado WHERE loteImportacion = :lote AND sync_eliminado = 0") suspend fun porLote(lote: String): List<PeriodoCerradoEntity>
     @Upsert suspend fun upsert(e: PeriodoCerradoEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM periodo_cerrado") suspend fun todosConEliminados(): List<PeriodoCerradoEntity>
@@ -197,6 +215,8 @@ interface PeriodoCerradoDao {
 
 @Dao
 interface MetaDao {
+    @Query("SELECT nombre FROM meta WHERE sync_eliminado = 0") suspend fun nombres(): List<String>
+    @Query("SELECT * FROM meta WHERE loteImportacion = :lote AND sync_eliminado = 0") suspend fun porLote(lote: String): List<MetaEntity>
     @Upsert suspend fun upsert(e: MetaEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM meta") suspend fun todosConEliminados(): List<MetaEntity>
@@ -208,6 +228,7 @@ data class AhorroMeta(val metaId: String, val total: Long)
 
 @Dao
 interface MovimientoMetaDao {
+    @Query("SELECT * FROM movimiento_meta WHERE metaId = :metaId AND sync_eliminado = 0") suspend fun deMeta(metaId: String): List<MovimientoMetaEntity>
     @Upsert suspend fun upsert(e: MovimientoMetaEntity)
     /** Para fotos: incluye los eliminados. */
     @Query("SELECT * FROM movimiento_meta") suspend fun todosConEliminados(): List<MovimientoMetaEntity>
