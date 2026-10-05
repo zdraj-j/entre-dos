@@ -152,20 +152,14 @@ class ImportacionTest {
         assertEquals(1, PlanImportador.armar(entrada.copy(gastos = listOf(g), omitirPosiblesDuplicados = false, huellasExistentes = listOf(HuellaGasto(dia(9, 1), 35_000, "D1")))).gastos.size)
     }
 
-    @Test fun deudasYMetas() {
+    @Test fun deudasAbiertas() {
         val deudas = FormatoEntreDos.deudas(LectorCsv.leer("id_origen,fecha,deudor,acreedor,monto,concepto\nd1,2026-09-20,Pareja,Zdraj,45000,Arriendo\nd2,2026-09-20,Zdraj,zdraj,1000,\n"), bogota)
         assertEquals(1, deudas.filas.size)
         assertEquals(1, deudas.errores.size)
-        val metas = FormatoEntreDos.metas(LectorCsv.leer("nombre,objetivo,ahorrado,color\nViaje,3000000,450000,#1b6b4a\nFondo,2000000,,\n"))
-        assertEquals(listOf(450_000L, 0L), metas.filas.map { it.ahorrado })
-        assertEquals("#1B6B4A", metas.filas[0].color)
-
         val p = PlanImportador.armar(
-            EntradaPlan(emptyList(), deudas.filas, metas.filas, mapOf("zdraj" to Miembro.A, "pareja" to Miembro.B), emptyMap(),
-                idsOrigenDeudas = emptySet(), metasExistentes = setOf("viaje"), zona = bogota)
+            EntradaPlan(emptyList(), deudas.filas, mapOf("zdraj" to Miembro.A, "pareja" to Miembro.B), emptyMap(), zona = bogota)
         )
         assertEquals(DeudaLista("d1", dia(9, 20), Miembro.B, Miembro.A, 45_000, "Arriendo"), p.deudas.single())
-        assertEquals(listOf("Fondo"), p.metas.map { it.nombre })
     }
 
     @Test fun periodosAnteriores() {

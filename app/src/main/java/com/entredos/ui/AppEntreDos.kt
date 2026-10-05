@@ -45,7 +45,6 @@ import com.entredos.ui.deudas.PantallaDeudas
 import com.entredos.ui.hogar.PantallaInicioHogar
 import com.entredos.ui.importacion.PantallaImportaciones
 import com.entredos.ui.importacion.PantallaImportar
-import com.entredos.ui.metas.PantallaMetas
 import com.entredos.ui.movimientos.DialogoEditarGasto
 import com.entredos.ui.movimientos.PantallaMovimientos
 import com.entredos.ui.pendientes.PantallaPendientes
@@ -140,7 +139,7 @@ private fun Principal(pendientes: Int, alReconectar: () -> Unit) {
             composable("resumen") {
                 PantallaResumen(
                     alVerGastos = { nav.verMovimientos(it) },
-                    alDeudas = { nav.navigate("deudas") }, alMetas = { nav.navigate("metas") },
+                    alDeudas = { nav.navigate("deudas") },
                     alRecurrentes = { nav.navigate("recurrentes") }, alDeteccion = { nav.navigate("deteccion") },
                     alPeriodos = { nav.navigate("periodos") }, alVerPeriodo = { nav.navigate("periodo/$it") },
                 )
@@ -153,7 +152,6 @@ private fun Principal(pendientes: Int, alReconectar: () -> Unit) {
             }
             composable("pendientes") { PantallaPendientes() }
             composable("deudas") { PantallaDeudas(alVolver = { nav.popBackStack() }) }
-            composable("metas") { PantallaMetas(alVolver = { nav.popBackStack() }) }
             composable("recurrentes") { PantallaRecurrentes(alVolver = { nav.popBackStack() }) }
             composable("deteccion") { PantallaDeteccion(alVolver = { nav.popBackStack() }, alLectorGenerico = { nav.navigate("lectorGenerico") }) }
             composable("lectorGenerico") { PantallaLectorGenerico() }

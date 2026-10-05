@@ -21,9 +21,7 @@ import com.entredos.data.local.entity.DeudaManualEntity
 import com.entredos.data.local.entity.GastoEntity
 import com.entredos.data.local.entity.HogarEntity
 import com.entredos.data.local.entity.LoteImportacionEntity
-import com.entredos.data.local.entity.MetaEntity
 import com.entredos.data.local.entity.MiembroEntity
-import com.entredos.data.local.entity.MovimientoMetaEntity
 import com.entredos.data.local.entity.ParteGastoEntity
 import com.entredos.data.local.entity.PeriodoCerradoEntity
 import com.entredos.data.local.entity.ReglaComercioEntity
@@ -42,7 +40,6 @@ data class ContextoImportacion(
     val categorias: List<CategoriaEntity>,
     val idsOrigenGastos: Set<String>,
     val idsOrigenDeudas: Set<String>,
-    val metas: Set<String>,
     val huellas: List<HuellaGasto>,
     val inicioPeriodoActual: Long,
     val rangosCerrados: List<Pair<Long, Long>>,
@@ -67,7 +64,6 @@ class ImportadorRepositorio @Inject constructor(
         categorias = db.categoriaDao().todas(),
         idsOrigenGastos = db.gastoDao().idsOrigenImportados().toSet(),
         idsOrigenDeudas = db.deudaManualDao().idsOrigen().toSet(),
-        metas = db.metaDao().nombres().toSet(),
         huellas = db.gastoDao().huellas(),
         inicioPeriodoActual = periodo.observarInicio().first(),
         rangosCerrados = db.periodoCerradoDao().rangos().map { it.inicio to it.fin },
@@ -87,7 +83,7 @@ class ImportadorRepositorio @Inject constructor(
         val yo = dispositivo.miembro() ?: error("Este teléfono aún no tiene titular")
         var lote = escritor.guardar(
             Tablas.LOTE_IMPORTACION,
-            LoteImportacionEntity(fecha = System.currentTimeMillis(), archivo = archivo, gastos = 0, categorias = 0, deudas = 0, metas = 0),
+            LoteImportacionEntity(fecha = System.currentTimeMillis(), archivo = archivo, gastos = 0, categorias = 0, deudas = 0),
         )
 
         // 1. Categorías nuevas
@@ -135,17 +131,13 @@ class ImportadorRepositorio @Inject constructor(
             }
         }
 
-        // 3. Deudas abiertas y metas
+        // 3. Deudas abiertas
         db.withTransaction {
             plan.deudas.forEach { d ->
                 escritor.guardar(
                     Tablas.DEUDA_MANUAL,
                     DeudaManualEntity(deudor = d.deudor, acreedor = d.acreedor, monto = d.monto, concepto = d.concepto, fecha = d.fecha, loteImportacion = lote.id, idOrigen = d.idOrigen),
                 )
-            }
-            plan.metas.forEachIndexed { i, m ->
-                val meta = escritor.guardar(Tablas.META, MetaEntity(nombre = m.nombre, objetivo = m.objetivo, color = m.color ?: PALETA[(i + 3) % PALETA.size], loteImportacion = lote.id))
-                if (m.ahorrado > 0) escritor.guardar(Tablas.MOVIMIENTO_META, MovimientoMetaEntity(metaId = meta.id, monto = m.ahorrado, fecha = System.currentTimeMillis()))
             }
         }
 
@@ -190,7 +182,7 @@ class ImportadorRepositorio @Inject constructor(
 
         lote = escritor.guardar(
             Tablas.LOTE_IMPORTACION,
-            lote.copy(gastos = plan.gastos.size, categorias = plan.categoriasNuevas.size, deudas = plan.deudas.size, metas = plan.metas.size),
+            lote.copy(gastos = plan.gastos.size, categorias = plan.categoriasNuevas.size, deudas = plan.deudas.size),
         )
         return ResultadoImportacion(lote, periodos, reglas)
     }
@@ -214,10 +206,6 @@ class ImportadorRepositorio @Inject constructor(
                 if (db.parteGastoDao().usosFueraDelLote(c.id, lote.id) == 0) escritor.eliminar(Tablas.CATEGORIA, c)
             }
             db.deudaManualDao().porLote(lote.id).forEach { escritor.eliminar(Tablas.DEUDA_MANUAL, it) }
-            db.metaDao().porLote(lote.id).forEach { m ->
-                db.movimientoMetaDao().deMeta(m.id).forEach { escritor.eliminar(Tablas.MOVIMIENTO_META, it) }
-                escritor.eliminar(Tablas.META, m)
-            }
             db.periodoCerradoDao().porLote(lote.id).forEach { escritor.eliminar(Tablas.PERIODO_CERRADO, it) }
             escritor.guardar(Tablas.LOTE_IMPORTACION, lote.copy(estado = EstadoLote.DESHECHO))
         }

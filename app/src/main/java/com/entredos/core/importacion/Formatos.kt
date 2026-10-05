@@ -31,8 +31,6 @@ data class FilaCategoria(
 
 data class FilaDeuda(val linea: Int, val idOrigen: String?, val fecha: Long, val deudor: String, val acreedor: String, val monto: Long, val concepto: String?)
 
-data class FilaMeta(val linea: Int, val nombre: String, val objetivo: Long, val ahorrado: Long, val color: String?)
-
 /** Filas leídas, errores por fila y filas omitidas a propósito (por ejemplo, ingresos). */
 data class Leido<T>(val filas: List<T>, val errores: List<ErrorFila>, val omitidas: Int = 0)
 
@@ -123,26 +121,6 @@ object FormatoEntreDos {
                 Movimientos.normalizar(deudor) == Movimientos.normalizar(acreedor) -> errores += ErrorFila(archivo, f.linea, "Deudor y acreedor son la misma persona")
                 monto == null || monto <= 0 -> errores += ErrorFila(archivo, f.linea, "El monto debe ser mayor que cero")
                 else -> filas += FilaDeuda(f.linea, tabla.valor(f, c["id_origen"]), fecha, deudor, acreedor, monto, tabla.valor(f, c["concepto"])?.take(120))
-            }
-        }
-        return Leido(filas, errores)
-    }
-
-    fun metas(tabla: TablaCsv): Leido<FilaMeta> {
-        val archivo = "metas.csv"
-        faltan(tabla, setOf("nombre", "objetivo"), archivo)?.let { return Leido(emptyList(), listOf(it)) }
-        val c = Indices(tabla)
-        val filas = mutableListOf<FilaMeta>()
-        val errores = mutableListOf<ErrorFila>()
-        for (f in tabla.filas) {
-            val nombre = tabla.valor(f, c["nombre"])
-            val objetivo = Valores.monto(tabla.valor(f, c["objetivo"]))
-            val ahorrado = tabla.valor(f, c["ahorrado"])?.let { Valores.monto(it) } ?: 0
-            when {
-                nombre == null -> errores += ErrorFila(archivo, f.linea, "Falta el nombre")
-                objetivo == null || objetivo <= 0 -> errores += ErrorFila(archivo, f.linea, "El objetivo debe ser mayor que cero")
-                ahorrado < 0 -> errores += ErrorFila(archivo, f.linea, "Lo ahorrado no puede ser negativo")
-                else -> filas += FilaMeta(f.linea, nombre.take(120), objetivo, ahorrado, Valores.color(tabla.valor(f, c["color"])))
             }
         }
         return Leido(filas, errores)

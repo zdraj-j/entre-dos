@@ -11,9 +11,7 @@ import com.entredos.data.local.dao.DispositivoDao
 import com.entredos.data.local.dao.GastoDao
 import com.entredos.data.local.dao.HogarDao
 import com.entredos.data.local.dao.LoteImportacionDao
-import com.entredos.data.local.dao.MetaDao
 import com.entredos.data.local.dao.MiembroDao
-import com.entredos.data.local.dao.MovimientoMetaDao
 import com.entredos.data.local.dao.ParteGastoDao
 import com.entredos.data.local.dao.PeriodoCerradoDao
 import com.entredos.data.local.dao.RecurrenteDao
@@ -28,21 +26,19 @@ import com.entredos.data.local.entity.DispositivoLocalEntity
 import com.entredos.data.local.entity.GastoEntity
 import com.entredos.data.local.entity.HogarEntity
 import com.entredos.data.local.entity.LoteImportacionEntity
-import com.entredos.data.local.entity.MetaEntity
 import com.entredos.data.local.entity.MiembroEntity
-import com.entredos.data.local.entity.MovimientoMetaEntity
 import com.entredos.data.local.entity.ParteGastoEntity
 import com.entredos.data.local.entity.PeriodoCerradoEntity
 import com.entredos.data.local.entity.RecurrenteEntity
 import com.entredos.data.local.entity.ReglaComercioEntity
 
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = true,
     entities = [
         HogarEntity::class, MiembroEntity::class, CategoriaEntity::class,
         GastoEntity::class, ParteGastoEntity::class, DeudaManualEntity::class, AbonoEntity::class,
-        PeriodoCerradoEntity::class, MetaEntity::class, MovimientoMetaEntity::class,
+        PeriodoCerradoEntity::class,
         RecurrenteEntity::class, ReglaComercioEntity::class, LoteImportacionEntity::class,
         DispositivoLocalEntity::class, CambioPendienteEntity::class, ArchivoAplicadoEntity::class,
     ],
@@ -56,8 +52,6 @@ abstract class EntreDosDatabase : RoomDatabase() {
     abstract fun deudaManualDao(): DeudaManualDao
     abstract fun abonoDao(): AbonoDao
     abstract fun periodoCerradoDao(): PeriodoCerradoDao
-    abstract fun metaDao(): MetaDao
-    abstract fun movimientoMetaDao(): MovimientoMetaDao
     abstract fun recurrenteDao(): RecurrenteDao
     abstract fun reglaComercioDao(): ReglaComercioDao
     abstract fun loteImportacionDao(): LoteImportacionDao

@@ -23,7 +23,6 @@ data class ArchivosImportacion(
     val gastos: String? get() = textos["gastos.csv"]
     val categorias: String? get() = textos["categorias.csv"]
     val deudas: String? get() = textos["deudas_abiertas.csv"]
-    val metas: String? get() = textos["metas.csv"]
     val manifiesto: String? get() = textos["manifest.json"]
 }
 
@@ -78,6 +77,6 @@ class LectorArchivo @Inject constructor(@ApplicationContext private val context:
     private companion object {
         const val MAX_BYTES = 20L * 1024 * 1024
         const val MAX_DESCOMPRIMIDO = 100L * 1024 * 1024
-        val PERMITIDOS = setOf("gastos.csv", "categorias.csv", "deudas_abiertas.csv", "metas.csv", "manifest.json")
+        val PERMITIDOS = setOf("gastos.csv", "categorias.csv", "deudas_abiertas.csv", "manifest.json")
     }
 }

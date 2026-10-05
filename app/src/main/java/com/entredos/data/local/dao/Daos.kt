@@ -21,9 +21,7 @@ import com.entredos.data.local.entity.DispositivoLocalEntity
 import com.entredos.data.local.entity.GastoEntity
 import com.entredos.data.local.entity.HogarEntity
 import com.entredos.data.local.entity.LoteImportacionEntity
-import com.entredos.data.local.entity.MetaEntity
 import com.entredos.data.local.entity.MiembroEntity
-import com.entredos.data.local.entity.MovimientoMetaEntity
 import com.entredos.data.local.entity.ParteGastoEntity
 import com.entredos.data.local.entity.PeriodoCerradoEntity
 import com.entredos.data.local.entity.RecurrenteEntity
@@ -220,30 +218,6 @@ interface PeriodoCerradoDao {
 }
 
 @Dao
-interface MetaDao {
-    @Query("SELECT nombre FROM meta WHERE sync_eliminado = 0") suspend fun nombres(): List<String>
-    @Query("SELECT * FROM meta WHERE loteImportacion = :lote AND sync_eliminado = 0") suspend fun porLote(lote: String): List<MetaEntity>
-    @Upsert suspend fun upsert(e: MetaEntity)
-    /** Para fotos: incluye los eliminados. */
-    @Query("SELECT * FROM meta") suspend fun todosConEliminados(): List<MetaEntity>
-    @Query("SELECT * FROM meta WHERE sync_eliminado = 0 ORDER BY nombre") fun observar(): Flow<List<MetaEntity>>
-    @Query("SELECT * FROM meta WHERE id = :id") suspend fun porId(id: String): MetaEntity?
-}
-
-data class AhorroMeta(val metaId: String, val total: Long)
-
-@Dao
-interface MovimientoMetaDao {
-    @Query("SELECT * FROM movimiento_meta WHERE metaId = :metaId AND sync_eliminado = 0") suspend fun deMeta(metaId: String): List<MovimientoMetaEntity>
-    @Upsert suspend fun upsert(e: MovimientoMetaEntity)
-    /** Para fotos: incluye los eliminados. */
-    @Query("SELECT * FROM movimiento_meta") suspend fun todosConEliminados(): List<MovimientoMetaEntity>
-    @Query("SELECT * FROM movimiento_meta WHERE id = :id") suspend fun porId(id: String): MovimientoMetaEntity?
-    @Query("SELECT metaId, SUM(monto) AS total FROM movimiento_meta WHERE sync_eliminado = 0 GROUP BY metaId")
-    fun observarAhorros(): Flow<List<AhorroMeta>>
-}
-
-@Dao
 interface RecurrenteDao {
     @Upsert suspend fun upsert(e: RecurrenteEntity)
     /** Para fotos: incluye los eliminados. */
@@ -318,8 +292,6 @@ interface SistemaDao {
              SELECT MAX(sync_actualizadoEn) FROM deuda_manual UNION ALL
              SELECT MAX(sync_actualizadoEn) FROM abono UNION ALL
              SELECT MAX(sync_actualizadoEn) FROM periodo_cerrado UNION ALL
-             SELECT MAX(sync_actualizadoEn) FROM meta UNION ALL
-             SELECT MAX(sync_actualizadoEn) FROM movimiento_meta UNION ALL
              SELECT MAX(sync_actualizadoEn) FROM recurrente UNION ALL
              SELECT MAX(sync_actualizadoEn) FROM regla_comercio UNION ALL
              SELECT MAX(sync_actualizadoEn) FROM lote_importacion)"""

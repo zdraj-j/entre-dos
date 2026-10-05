@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
@@ -112,7 +111,7 @@ class ResumenViewModel @Inject constructor(
 @Composable
 fun PantallaResumen(
     alVerGastos: (String?) -> Unit,
-    alDeudas: () -> Unit, alMetas: () -> Unit, alRecurrentes: () -> Unit, alDeteccion: () -> Unit,
+    alDeudas: () -> Unit, alRecurrentes: () -> Unit, alDeteccion: () -> Unit,
     alPeriodos: () -> Unit, alVerPeriodo: (String) -> Unit,
     vm: ResumenViewModel = hiltViewModel(),
 ) {
@@ -160,7 +159,6 @@ fun PantallaResumen(
             }
             Tarjeta {
                 Dato("Deudas", if (e.deudasAbiertas > 0) "${e.deudasAbiertas} abiertas" else "Al día", alTocar = alDeudas, inicio = { Icon(Icons.Default.SwapHoriz, null, tint = MaterialTheme.colorScheme.primary) })
-                Dato("Metas de ahorro", "", alTocar = alMetas, inicio = { Icon(Icons.Default.Savings, null, tint = MaterialTheme.colorScheme.primary) })
                 Dato("Gastos recurrentes", "", alTocar = alRecurrentes, inicio = { Icon(Icons.Default.Repeat, null, tint = MaterialTheme.colorScheme.primary) })
                 Dato("Detección y reglas", "", alTocar = alDeteccion, inicio = { Icon(Icons.Default.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary) })
                 Dato("Periodos anteriores", "${e.cerrados.size}", alTocar = alPeriodos, inicio = { Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.primary) })

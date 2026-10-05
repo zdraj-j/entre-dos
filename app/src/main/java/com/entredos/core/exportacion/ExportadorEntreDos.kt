@@ -21,7 +21,6 @@ data class GastoExport(
 
 data class CategoriaExport(val nombre: String, val responsable: Responsable, val presupuesto: Long?, val color: String?, val destacada: Boolean)
 data class DeudaExport(val id: String, val fecha: Long, val deudor: Miembro, val acreedor: Miembro, val pendiente: Long, val concepto: String)
-data class MetaExport(val nombre: String, val objetivo: Long, val ahorrado: Long, val color: String?)
 
 /**
  * Respaldo en el mismo formato que lee el importador (versión 1): sirve para guardar una copia
@@ -33,7 +32,6 @@ object ExportadorEntreDos {
         gastos: List<GastoExport>,
         categorias: List<CategoriaExport>,
         deudas: List<DeudaExport>,
-        metas: List<MetaExport>,
         nombres: Map<Miembro, String>,
         ahora: Long,
         zona: ZoneId,
@@ -63,13 +61,11 @@ object ExportadorEntreDos {
             d.append(Csv.fila(it.id, fecha(it.fecha), nombre(it.deudor), nombre(it.acreedor), it.pendiente, it.concepto)).append('\n')
         }
 
-        val m = StringBuilder("nombre,objetivo,ahorrado,color\n")
-        metas.forEach { m.append(Csv.fila(it.nombre, it.objetivo, maxOf(it.ahorrado, 0), it.color)).append('\n') }
 
         val manifiesto = """{"formato": "entredos-import", "version": 1, "app_origen": "Entre dos", "exportado": "${Instant.ofEpochMilli(ahora).atZone(zona).toOffsetDateTime()}"}"""
         return linkedMapOf(
             "gastos.csv" to g.toString(), "categorias.csv" to c.toString(),
-            "deudas_abiertas.csv" to d.toString(), "metas.csv" to m.toString(), "manifest.json" to manifiesto,
+            "deudas_abiertas.csv" to d.toString(), "manifest.json" to manifiesto,
         )
     }
 

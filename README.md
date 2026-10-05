@@ -13,7 +13,7 @@ servidores de terceros.
 - **Presupuesto** por categoría con tope o sin tope, y categorías personales o compartidas.
 - **Deudas automáticas:** categoría de una persona pagada por la otra = deuda completa; compartida = la mitad o el reparto que se ajuste.
 - **Periodos:** cierre manual o automático, historial con estadísticas y descarga en CSV.
-- **Metas de ahorro, gastos recurrentes y reglas de comercio** que se aprenden con 3 confirmaciones.
+- **Gastos recurrentes y reglas de comercio** que se aprenden con 3 confirmaciones.
 - **Widget de inicio** con lo disponible del periodo, lo gastado hoy y un botón para registrar; y acceso rápido "Nuevo gasto" al mantener presionado el ícono.
 - **Wifi en casa:** con la app abierta, los dos teléfonos se pasan los cambios directamente aunque no haya internet.
 - **Importar** desde otras apps (formato propio o cualquier CSV) y **exportar** un respaldo en el mismo formato.
@@ -39,7 +39,7 @@ app/src/main/java/com/entredos/
 │   ├── notificaciones/ servicio que lee avisos, avisos de la app, diagnóstico
 │   ├── wifi/        anuncio y búsqueda en la red (NSD) y conexiones
 │   ├── importacion/ lectura de archivos y guardado por lotes
-│   └── repository/  gastos, deudas, periodos, cierre, categorías, metas, etc.
+│   └── repository/  gastos, deudas, periodos, cierre, categorías, etc.
 ├── di/              módulos de Hilt
 └── ui/              pantallas de Compose
 ```

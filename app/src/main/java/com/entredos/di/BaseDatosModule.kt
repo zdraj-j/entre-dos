@@ -39,8 +39,6 @@ object BaseDatosModule {
     @Provides fun deudaManualDao(db: EntreDosDatabase) = db.deudaManualDao()
     @Provides fun abonoDao(db: EntreDosDatabase) = db.abonoDao()
     @Provides fun periodoCerradoDao(db: EntreDosDatabase) = db.periodoCerradoDao()
-    @Provides fun metaDao(db: EntreDosDatabase) = db.metaDao()
-    @Provides fun movimientoMetaDao(db: EntreDosDatabase) = db.movimientoMetaDao()
     @Provides fun recurrenteDao(db: EntreDosDatabase) = db.recurrenteDao()
     @Provides fun reglaComercioDao(db: EntreDosDatabase) = db.reglaComercioDao()
     @Provides fun loteImportacionDao(db: EntreDosDatabase) = db.loteImportacionDao()

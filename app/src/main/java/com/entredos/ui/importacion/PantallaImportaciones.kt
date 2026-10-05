@@ -69,7 +69,7 @@ fun PantallaImportaciones(alImportar: () -> Unit, vm: ImportacionesViewModel = h
                     Column(Modifier.weight(1f)) {
                         Text(l.archivo)
                         Text(DateFormat.getDateTimeInstance().format(Date(l.fecha)), style = MaterialTheme.typography.bodySmall)
-                        Text("${l.gastos} gastos · ${l.categorias} categorías · ${l.deudas} deudas · ${l.metas} metas", style = MaterialTheme.typography.bodySmall)
+                        Text("${l.gastos} gastos · ${l.categorias} categorías · ${l.deudas} deudas", style = MaterialTheme.typography.bodySmall)
                     }
                     when {
                         l.estado == EstadoLote.DESHECHO -> Text("Deshecha", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -86,7 +86,7 @@ fun PantallaImportaciones(alImportar: () -> Unit, vm: ImportacionesViewModel = h
         AlertDialog(
             onDismissRequest = { confirmar = null },
             title = { Text("¿Deshacer esta importación?") },
-            text = { Text("Se borran ${l.gastos} gastos, sus categorías nuevas (salvo las que ya usaste después), ${l.deudas} deudas, ${l.metas} metas y los periodos anteriores creados. También desaparecen en el teléfono de tu pareja.") },
+            text = { Text("Se borran ${l.gastos} gastos, sus categorías nuevas (salvo las que ya usaste después), ${l.deudas} deudas y los periodos anteriores creados. También desaparecen en el teléfono de tu pareja.") },
             confirmButton = { TextButton(onClick = { vm.deshacer(l); confirmar = null }) { Text("Deshacer") } },
             dismissButton = { TextButton(onClick = { confirmar = null }) { Text("Cancelar") } },
         )

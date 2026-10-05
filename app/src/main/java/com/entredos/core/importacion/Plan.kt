@@ -59,14 +59,12 @@ data class HuellaGasto(val fecha: Long, val monto: Long, val texto: String)
 data class EntradaPlan(
     val gastos: List<GastoImportado>,
     val deudas: List<FilaDeuda> = emptyList(),
-    val metas: List<FilaMeta> = emptyList(),
     /** Nombre de persona normalizado → titular. */
     val personas: Map<String, Miembro>,
     /** Nombre de categoría normalizado → destino. */
     val categorias: Map<String, DestinoCategoria>,
     val idsOrigenGastos: Set<String> = emptySet(),
     val idsOrigenDeudas: Set<String> = emptySet(),
-    val metasExistentes: Set<String> = emptySet(),
     val huellasExistentes: List<HuellaGasto> = emptyList(),
     val omitirPosiblesDuplicados: Boolean = true,
     val zona: ZoneId,
@@ -75,7 +73,6 @@ data class EntradaPlan(
 data class PlanImportacion(
     val gastos: List<GastoListo>,
     val deudas: List<DeudaLista>,
-    val metas: List<FilaMeta>,
     /** Claves de las categorías nuevas que se crearán (solo las que usa algún gasto). */
     val categoriasNuevas: Map<String, DestinoCategoria.Nueva>,
     val duplicados: Int,
@@ -156,11 +153,10 @@ object PlanImportador {
             }
         }
 
-        val metas = e.metas.filter { clave(it.nombre) !in e.metasExistentes.map(::clave) }
         val usadas = listos.flatMap { g -> g.partes.map { it.categoria } }.toSet()
         val nuevas = e.categorias.filterKeys { it in usadas }.mapNotNull { (k, v) -> (v as? DestinoCategoria.Nueva)?.let { k to it } }.toMap()
 
-        return PlanImportacion(listos, deudas, metas, nuevas, duplicados, posibles, errores)
+        return PlanImportacion(listos, deudas, nuevas, duplicados, posibles, errores)
     }
 
     private fun huella(fecha: Long, monto: Long, texto: String, zona: ZoneId) =

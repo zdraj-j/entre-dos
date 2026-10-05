@@ -171,32 +171,6 @@ data class PeriodoCerradoEntity(
 }
 
 @Serializable
-@Entity(tableName = "meta")
-data class MetaEntity(
-    @PrimaryKey override val id: String = nuevoId(),
-    val nombre: String,
-    val objetivo: Long,
-    val color: String,
-    val loteImportacion: String? = null,
-    @Embedded(prefix = "sync_") override val sync: SyncInfo = SyncInfo(),
-) : Sincronizable<MetaEntity> {
-    override fun conSync(sync: SyncInfo) = copy(sync = sync)
-}
-
-/** Monto positivo = abono a la meta; negativo = retiro. */
-@Serializable
-@Entity(tableName = "movimiento_meta", indices = [Index("metaId")])
-data class MovimientoMetaEntity(
-    @PrimaryKey override val id: String = nuevoId(),
-    val metaId: String,
-    val monto: Long,
-    val fecha: Long,
-    @Embedded(prefix = "sync_") override val sync: SyncInfo = SyncInfo(),
-) : Sincronizable<MovimientoMetaEntity> {
-    override fun conSync(sync: SyncInfo) = copy(sync = sync)
-}
-
-@Serializable
 @Entity(tableName = "recurrente")
 data class RecurrenteEntity(
     @PrimaryKey override val id: String = nuevoId(),
@@ -232,7 +206,6 @@ data class LoteImportacionEntity(
     val gastos: Int,
     val categorias: Int,
     val deudas: Int,
-    val metas: Int,
     val estado: EstadoLote = EstadoLote.ACTIVO,
     @Embedded(prefix = "sync_") override val sync: SyncInfo = SyncInfo(),
 ) : Sincronizable<LoteImportacionEntity> {

@@ -24,7 +24,7 @@
 3. Modo automático: cambiar el día de inicio a hoy y reabrir la app al día siguiente: se archiva solo.
 
 ## Importar y exportar
-1. Importar `ejemplos/entredos-export-ejemplo.zip`: 7 gastos, 1 deuda, 1 meta, 3 periodos anteriores (julio, agosto y septiembre, con día de inicio 1).
+1. Importar `ejemplos/entredos-export-ejemplo.zip`: 7 gastos, 1 deuda, 3 periodos anteriores (julio, agosto y septiembre, con día de inicio 1).
 2. Importarlo otra vez: todo sale como ya importado.
 3. Importar `ejemplos/otra-app-ejemplo.csv`: entran 3 y se omite el salario.
 4. Ajustes › Importaciones › Deshacer: desaparece en los dos teléfonos.
@@ -39,7 +39,7 @@
 6. Al volver internet, todo sube a Drive igual: reinstalar en un teléfono y recuperar con "Soy …" trae también lo que se pasó por wifi.
 
 ## Aspecto y widget
-1. Revisar en modo claro y oscuro: Movimientos, Presupuesto, Resumen, Deudas, Metas y Ajustes.
+1. Revisar en modo claro y oscuro: Movimientos, Presupuesto, Resumen, Deudas y Ajustes.
 2. Sin datos (hogar recién creado): cada pantalla muestra un estado vacío con qué hacer.
 3. Agregar el widget "Entre dos" a la pantalla de inicio: muestra lo disponible y lo de hoy; tras registrar un gasto se actualiza en un par de segundos.
 4. Con gastos por clasificar, el widget lo dice en naranja. "Nuevo gasto" abre el teclado.

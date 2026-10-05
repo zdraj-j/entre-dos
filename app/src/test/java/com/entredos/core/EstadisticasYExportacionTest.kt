@@ -4,7 +4,6 @@ import com.entredos.core.exportacion.CategoriaExport
 import com.entredos.core.exportacion.DeudaExport
 import com.entredos.core.exportacion.ExportadorEntreDos
 import com.entredos.core.exportacion.GastoExport
-import com.entredos.core.exportacion.MetaExport
 import com.entredos.core.exportacion.ParteExport
 import com.entredos.core.importacion.FormatoEntreDos
 import com.entredos.core.importacion.LectorCsv
@@ -54,7 +53,6 @@ class EstadisticasYExportacionTest {
             gastos,
             listOf(CategoriaExport("Mercado", Responsable.COMPARTIDA, 900_000, "#2E7D5B", true), CategoriaExport("Ahorro", Responsable.A, null, null, false)),
             listOf(DeudaExport("m1", ms(9, 20), Miembro.B, Miembro.A, 45_000, "Arriendo"), DeudaExport("m2", ms(9, 1), Miembro.A, Miembro.B, 0, "Saldada")),
-            listOf(MetaExport("Viaje", 3_000_000, 450_000, null)),
             mapOf(Miembro.A to "Zdraj", Miembro.B to "Pareja"), ms(10, 4), bogota,
         )
         val leido = FormatoEntreDos.gastos(LectorCsv.leer(archivos.getValue("gastos.csv")), bogota)
@@ -67,7 +65,7 @@ class EstadisticasYExportacionTest {
         assertEquals(true, agrupado[2].transferencia)
         assertEquals("compartida", FormatoEntreDos.categorias(LectorCsv.leer(archivos.getValue("categorias.csv"))).filas[0].responsable)
         assertEquals(1, FormatoEntreDos.deudas(LectorCsv.leer(archivos.getValue("deudas_abiertas.csv")), bogota).filas.size)
-        assertEquals(450_000L, FormatoEntreDos.metas(LectorCsv.leer(archivos.getValue("metas.csv"))).filas.single().ahorrado)
+        assertEquals(false, archivos.containsKey("metas.csv"))
         assertEquals("entredos-export-20261004.zip", ExportadorEntreDos.nombreArchivo(ms(10, 4), bogota))
     }
 }

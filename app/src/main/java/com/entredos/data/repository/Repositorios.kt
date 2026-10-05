@@ -10,8 +10,6 @@ import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.local.Escritor
 import com.entredos.data.local.Tablas
 import com.entredos.data.local.entity.CategoriaEntity
-import com.entredos.data.local.entity.MetaEntity
-import com.entredos.data.local.entity.MovimientoMetaEntity
 import com.entredos.data.local.entity.RecurrenteEntity
 import com.entredos.data.local.entity.ReglaComercioEntity
 import com.entredos.core.Clasificacion
@@ -36,29 +34,6 @@ class CategoriasRepositorio @Inject constructor(private val db: EntreDosDatabase
 
     /** Los gastos ya registrados conservan sus partes; en las listas la categoría aparece como eliminada. */
     suspend fun eliminar(c: CategoriaEntity) = escritor.eliminar(Tablas.CATEGORIA, c)
-}
-
-@Singleton
-class MetasRepositorio @Inject constructor(private val db: EntreDosDatabase, private val escritor: Escritor) {
-
-    suspend fun guardar(existente: MetaEntity?, nombre: String, objetivo: Long, color: String): MetaEntity {
-        require(nombre.isNotBlank()) { "Escribe un nombre" }
-        require(objetivo > 0) { "El objetivo debe ser mayor que cero" }
-        val base = existente ?: MetaEntity(nombre = nombre, objetivo = objetivo, color = color)
-        return escritor.guardar(Tablas.META, base.copy(nombre = nombre.trim(), objetivo = objetivo, color = color))
-    }
-
-    /** Monto positivo = abono; negativo = retiro (no puede dejar la meta en negativo). */
-    suspend fun mover(meta: MetaEntity, monto: Long, ahorradoActual: Long) {
-        require(monto != 0L) { "Escribe un monto" }
-        require(ahorradoActual + monto >= 0) { "No puedes retirar más de lo ahorrado" }
-        escritor.guardar(Tablas.MOVIMIENTO_META, MovimientoMetaEntity(metaId = meta.id, monto = monto, fecha = System.currentTimeMillis()))
-    }
-
-    suspend fun eliminar(meta: MetaEntity) = db.withTransaction {
-        db.movimientoMetaDao().deMeta(meta.id).forEach { escritor.eliminar(Tablas.MOVIMIENTO_META, it) }
-        escritor.eliminar(Tablas.META, meta)
-    }
 }
 
 @Singleton

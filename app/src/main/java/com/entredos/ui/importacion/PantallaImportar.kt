@@ -72,7 +72,7 @@ fun PantallaImportar(alTerminar: () -> Unit, alVerMovimientos: () -> Unit, vm: I
             is PasoImportar.Listo -> {
                 val r = p.resultado
                 Text("Listo", style = MaterialTheme.typography.titleLarge)
-                Text("Se importaron ${r.lote.gastos} gastos, ${r.lote.categorias} categorías nuevas, ${r.lote.deudas} deudas y ${r.lote.metas} metas. " +
+                Text("Se importaron ${r.lote.gastos} gastos, ${r.lote.categorias} categorías nuevas y ${r.lote.deudas} deudas. " +
                     "También se crearon ${r.periodos} periodos anteriores y ${r.reglas} reglas de comercio.")
                 Text("Si algo no quedó bien, puedes deshacer esta importación desde Ajustes › Importaciones.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = alVerMovimientos) { Text("Ver en Movimientos") }
@@ -192,7 +192,7 @@ private fun PasoRevisar(p: PasoImportar.Revisar, vm: ImportarViewModel) {
     Text("Ya importados antes (se omiten): ${plan.duplicados}")
     Text("Posibles duplicados sin id: ${plan.posiblesDuplicados}")
     if (p.omitidas > 0) Text("Ingresos o filas en cero omitidos: ${p.omitidas}")
-    Text("Categorías nuevas: ${plan.categoriasNuevas.size} · Deudas abiertas: ${plan.deudas.size} · Metas: ${plan.metas.size}")
+    Text("Categorías nuevas: ${plan.categoriasNuevas.size} · Deudas abiertas: ${plan.deudas.size}")
     Text("Periodos anteriores que se crearían: ${p.periodosPrevistos}")
     Text("Los gastos importados no generan deudas: lo pendiente entra solo por las deudas abiertas.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
@@ -207,7 +207,7 @@ private fun PasoRevisar(p: PasoImportar.Revisar, vm: ImportarViewModel) {
     Opcion("Crear periodos anteriores", p.opciones.crearPeriodos) { vm.cambiarOpciones(p.opciones.copy(crearPeriodos = it), p.omitirPosibles) }
     Opcion("Aprender reglas de comercio", p.opciones.aprenderReglas) { vm.cambiarOpciones(p.opciones.copy(aprenderReglas = it), p.omitirPosibles) }
 
-    val hayAlgo = plan.gastos.isNotEmpty() || plan.deudas.isNotEmpty() || plan.metas.isNotEmpty()
+    val hayAlgo = plan.gastos.isNotEmpty() || plan.deudas.isNotEmpty()
     Button(onClick = { vm.importar(p) }, enabled = hayAlgo) { Text(if (hayAlgo) "Importar" else "No hay nada nuevo para importar") }
     TextButton(onClick = vm::reiniciar) { Text("Elegir otro archivo") }
 }

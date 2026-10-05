@@ -7,7 +7,6 @@ import com.entredos.core.exportacion.CategoriaExport
 import com.entredos.core.exportacion.DeudaExport
 import com.entredos.core.exportacion.ExportadorEntreDos
 import com.entredos.core.exportacion.GastoExport
-import com.entredos.core.exportacion.MetaExport
 import com.entredos.core.exportacion.ParteExport
 import com.entredos.data.local.EntreDosDatabase
 import kotlinx.coroutines.flow.first
@@ -36,12 +35,10 @@ class ExportacionRepositorio @Inject constructor(private val db: EntreDosDatabas
             if (partes.isEmpty()) null
             else GastoExport(g.gasto.id, g.gasto.fecha, g.gasto.pagadoPor, g.gasto.nombre, g.gasto.comercio, g.gasto.tipo == TipoGasto.TRANSFERENCIA, partes)
         }
-        val ahorros = db.movimientoMetaDao().observarAhorros().first().associate { it.metaId to it.total }
         val archivos = ExportadorEntreDos.archivos(
             gastos = gastos,
             categorias = categorias.values.filter { !it.sync.eliminado }.map { CategoriaExport(it.nombre, it.responsable, it.presupuesto, it.color, it.destacada) },
             deudas = deudas.observar().first().map { DeudaExport(it.id, it.fecha, it.deudor, it.acreedor, it.pendiente, it.concepto) },
-            metas = db.metaDao().observar().first().map { MetaExport(it.nombre, it.objetivo, ahorros[it.id] ?: 0, it.color) },
             nombres = db.miembroDao().todos().associate { Miembro.valueOf(it.id) to it.nombre },
             ahora = ahora, zona = zona,
         )

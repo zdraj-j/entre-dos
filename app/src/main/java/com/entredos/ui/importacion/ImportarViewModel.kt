@@ -11,7 +11,6 @@ import com.entredos.core.importacion.ErrorFila
 import com.entredos.core.importacion.FilaCategoria
 import com.entredos.core.importacion.FilaDeuda
 import com.entredos.core.importacion.FilaGasto
-import com.entredos.core.importacion.FilaMeta
 import com.entredos.core.importacion.FormatoEntreDos
 import com.entredos.core.importacion.FormatoGenerico
 import com.entredos.core.importacion.LectorCsv
@@ -73,7 +72,6 @@ class ImportarViewModel @Inject constructor(
     private var omitidas = 0
     private var categoriasCsv: List<FilaCategoria> = emptyList()
     private var deudas: List<FilaDeuda> = emptyList()
-    private var metas: List<FilaMeta> = emptyList()
     private var personas: Map<String, Miembro> = emptyMap()
     private var destinos: Map<String, DestinoCategoria> = emptyMap()
 
@@ -87,7 +85,6 @@ class ImportarViewModel @Inject constructor(
         val errores = mutableListOf<ErrorFila>()
         archivos.categorias?.let { FormatoEntreDos.categorias(LectorCsv.leer(it)) }?.also { categoriasCsv = it.filas; errores += it.errores }
         archivos.deudas?.let { FormatoEntreDos.deudas(LectorCsv.leer(it), zona) }?.also { deudas = it.filas; errores += it.errores }
-        archivos.metas?.let { FormatoEntreDos.metas(LectorCsv.leer(it)) }?.also { metas = it.filas; errores += it.errores }
         erroresLectura = errores
 
         if (FormatoEntreDos.esFormatoPropio(tabla)) {
@@ -163,8 +160,8 @@ class ImportarViewModel @Inject constructor(
             val agrupado = PlanImportador.agrupar(filasGastos)
             val plan = PlanImportador.armar(
                 EntradaPlan(
-                    gastos = agrupado.filas, deudas = deudas, metas = metas, personas = personas, categorias = destinos,
-                    idsOrigenGastos = ctx.idsOrigenGastos, idsOrigenDeudas = ctx.idsOrigenDeudas, metasExistentes = ctx.metas,
+                    gastos = agrupado.filas, deudas = deudas, personas = personas, categorias = destinos,
+                    idsOrigenGastos = ctx.idsOrigenGastos, idsOrigenDeudas = ctx.idsOrigenDeudas,
                     huellasExistentes = ctx.huellas, omitirPosiblesDuplicados = omitirPosibles, zona = zona,
                 )
             )
