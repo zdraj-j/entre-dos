@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Entre dos</string>
     <string name="atajo_nuevo_gasto">Nuevo gasto</string>
+    <string name="widget_descripcion">Lo disponible del periodo y un botón para registrar un gasto</string>
 </resources>

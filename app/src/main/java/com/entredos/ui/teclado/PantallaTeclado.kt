@@ -168,6 +168,7 @@ private fun Pantallita(estado: EstadoTeclado) {
         Text(
             FormatoPesos.pesos(maxOf(calc.total, 0)),
             fontSize = 48.sp,
+            style = com.entredos.ui.tema.EstiloCifras,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             color = if (calc.valido) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,

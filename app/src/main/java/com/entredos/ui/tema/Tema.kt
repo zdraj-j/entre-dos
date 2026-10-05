@@ -1,7 +1,14 @@
 package com.entredos.ui.tema
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -50,7 +57,30 @@ private val Oscuro = darkColorScheme(
     outlineVariant = Color(0xFF34413A),
 )
 
+/** Esquinas redondeadas como en el boceto: 14 dp en fichas y teclas, 20 dp en tarjetas. */
+private val Formas = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
+
+private val base = Typography()
+
+/** Títulos más firmes que los de Material por defecto; el resto igual. */
+private val Tipografia = base.copy(
+    headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
+    headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold),
+    titleLarge = base.titleLarge.copy(fontWeight = FontWeight.Bold),
+    titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+    labelLarge = base.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+)
+
+/** Estilo para montos: cifras de ancho fijo para que las columnas de pesos queden alineadas. */
+val EstiloCifras = TextStyle(fontFeatureSettings = "tnum")
+
 @Composable
 fun TemaEntreDos(contenido: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Oscuro else Claro, content = contenido)
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Oscuro else Claro, typography = Tipografia, shapes = Formas, content = contenido)
 }

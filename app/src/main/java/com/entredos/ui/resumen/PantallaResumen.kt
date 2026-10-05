@@ -1,6 +1,31 @@
 package com.entredos.ui.resumen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import com.entredos.ui.comun.Avatar
+import com.entredos.ui.comun.BarraProgreso
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Monto
+import com.entredos.ui.comun.MontoGrande
+import com.entredos.ui.comun.PuntoColor
+import com.entredos.ui.comun.Tarjeta
+import com.entredos.ui.comun.TituloPantalla
+import com.entredos.ui.teclado.colorDe
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,7 +68,6 @@ import com.entredos.data.repository.CierreRepositorio
 import com.entredos.data.repository.DeudasRepositorio
 import com.entredos.data.repository.PeriodoRepositorio
 import com.entredos.ui.comun.Dato
-import com.entredos.ui.comun.Seccion
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,28 +121,52 @@ fun PantallaResumen(
     var confirmar by remember { mutableStateOf(false) }
     val r = e.resumen
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        Text("Resumen del periodo", style = MaterialTheme.typography.titleLarge)
-        Dato("Gasto total", FormatoPesos.pesos(r.total), alTocar = { alVerGastos(null) })
-        HorizontalDivider()
-        Seccion("Por categoría") {
-            if (r.porCategoria.isEmpty()) Text("Aún no hay gastos en este periodo.")
-            r.porCategoria.forEach { (id, total) -> Dato(e.categorias[id]?.nombre ?: "Categoría eliminada", FormatoPesos.pesos(total), alTocar = { alVerGastos(id) }) }
+    val maximo = r.porCategoria.maxOfOrNull { it.second }?.coerceAtLeast(1) ?: 1
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+        TituloPantalla("Resumen", "Periodo actual")
+        Column(Modifier.padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Tarjeta(alTocar = { alVerGastos(null) }) {
+                MontoGrande("Gasto del periodo", r.total)
+                if (r.total > 0) {
+                    val a = r.porPersona[Miembro.A] ?: 0
+                    RepartoPersonas(a.toFloat() / r.total)
+                    Miembro.entries.forEach { m ->
+                        Dato(nombreTitular(e.miembros, m), FormatoPesos.pesos(r.porPersona[m] ?: 0), inicio = { Avatar(nombreTitular(e.miembros, m), fondo = colorPersona(m), tinta = Color.White) })
+                    }
+                }
+            }
+            Tarjeta {
+                Text("Por categoría", style = MaterialTheme.typography.titleMedium)
+                if (r.porCategoria.isEmpty()) Text("Aún no hay gastos en este periodo.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                r.porCategoria.forEach { (id, total) ->
+                    val c = e.categorias[id]
+                    Column(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable { alVerGastos(id) }.padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PuntoColor(c?.color ?: "#8A948E", 10)
+                            Text(c?.nombre ?: "Categoría eliminada", Modifier.weight(1f))
+                            Monto(total)
+                        }
+                        BarraProgreso(total.toFloat() / maximo, color = colorDe(c?.color ?: "#8A948E"))
+                    }
+                }
+            }
+            if (r.comercios.isNotEmpty()) Tarjeta {
+                Text("Comercios con más gasto", style = MaterialTheme.typography.titleMedium)
+                r.comercios.forEachIndexed { i, (c, t) -> Dato("${i + 1}. $c", FormatoPesos.pesos(t)) }
+            }
+            if (e.cerrados.size >= 2) Tarjeta {
+                Text("Tendencia", style = MaterialTheme.typography.titleMedium)
+                Tendencia(e.cerrados.take(6).reversed().map { it.totalGastado })
+            }
+            Tarjeta {
+                Dato("Deudas", if (e.deudasAbiertas > 0) "${e.deudasAbiertas} abiertas" else "Al día", alTocar = alDeudas, inicio = { Icon(Icons.Default.SwapHoriz, null, tint = MaterialTheme.colorScheme.primary) })
+                Dato("Metas de ahorro", "", alTocar = alMetas, inicio = { Icon(Icons.Default.Savings, null, tint = MaterialTheme.colorScheme.primary) })
+                Dato("Gastos recurrentes", "", alTocar = alRecurrentes, inicio = { Icon(Icons.Default.Repeat, null, tint = MaterialTheme.colorScheme.primary) })
+                Dato("Detección y reglas", "", alTocar = alDeteccion, inicio = { Icon(Icons.Default.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary) })
+                Dato("Periodos anteriores", "${e.cerrados.size}", alTocar = alPeriodos, inicio = { Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.primary) })
+            }
+            Button(onClick = { confirmar = true }, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Cerrar y archivar periodo") }
         }
-        Seccion("Quién gastó") { Miembro.entries.forEach { m -> Dato(nombreTitular(e.miembros, m), FormatoPesos.pesos(r.porPersona[m] ?: 0)) } }
-        Seccion("Comercios con más gasto") {
-            if (r.comercios.isEmpty()) Text("Sin comercios detectados.")
-            r.comercios.forEach { (c, t) -> Dato(c, FormatoPesos.pesos(t)) }
-        }
-        if (e.cerrados.size >= 2) Seccion("Tendencia") { Tendencia(e.cerrados.take(6).reversed().map { it.totalGastado }) }
-        Seccion("Más") {
-            Dato("Deudas", if (e.deudasAbiertas > 0) "${e.deudasAbiertas} abiertas" else "Al día", alTocar = alDeudas)
-            Dato("Metas de ahorro", "", alTocar = alMetas)
-            Dato("Gastos recurrentes", "", alTocar = alRecurrentes)
-            Dato("Detección y reglas", "", alTocar = alDeteccion)
-            Dato("Periodos anteriores", "${e.cerrados.size}", alTocar = alPeriodos)
-        }
-        Button(onClick = { confirmar = true }, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) { Text("Cerrar y archivar periodo") }
     }
 
     if (confirmar) AlertDialog(
@@ -146,6 +194,19 @@ fun PantallaResumen(
             confirmButton = { TextButton(onClick = { vm.recienCerrado.value = null; alVerPeriodo(p.id) }) { Text("Ver y descargar") } },
             dismissButton = { TextButton(onClick = { vm.recienCerrado.value = null }) { Text("Listo") } },
         )
+    }
+}
+
+private val COLOR_A = Color(0xFF2E7D5B)
+private val COLOR_B = Color(0xFF3A5BA0)
+private fun colorPersona(m: Miembro) = if (m == Miembro.A) COLOR_A else COLOR_B
+
+/** Una barra partida en dos: cuánto del gasto pagó cada titular. */
+@Composable
+private fun RepartoPersonas(fraccionA: Float) {
+    Row(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(5.dp))) {
+        if (fraccionA > 0f) Box(Modifier.weight(fraccionA.coerceAtLeast(0.001f)).fillMaxHeight().background(COLOR_A))
+        if (fraccionA < 1f) Box(Modifier.weight((1f - fraccionA).coerceAtLeast(0.001f)).fillMaxHeight().background(COLOR_B))
     }
 }
 

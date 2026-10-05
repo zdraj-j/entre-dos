@@ -1,6 +1,15 @@
 package com.entredos.ui.metas
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.Savings
+import androidx.compose.ui.Alignment
+import com.entredos.ui.comun.BarraProgreso
+import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Monto
+import com.entredos.ui.comun.PuntoColor
+import com.entredos.ui.comun.Tarjeta
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -78,21 +87,36 @@ fun PantallaMetas(alVolver: () -> Unit, vm: MetasViewModel = hiltViewModel()) {
     var creando by remember { mutableStateOf(false) }
     var moviendo by remember { mutableStateOf<MetaConAhorro?>(null) }
 
-    Scaffold(topBar = { Barra("Metas de ahorro", alVolver) }, floatingActionButton = { FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nueva meta") } }) { m ->
-        LazyColumn(Modifier.fillMaxSize().padding(m).padding(horizontal = 16.dp)) {
-            item { Text("Total ahorrado: ${FormatoPesos.pesos(metas.sumOf { it.ahorrado })}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 12.dp)) }
-            if (metas.isEmpty()) item { Text("Crea una meta: un viaje, un fondo de emergencias…") }
-            items(metas, key = { it.meta.id }) { mc ->
-                Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(mc.meta.nombre, fontWeight = FontWeight.SemiBold)
-                    LinearProgressIndicator(progress = { (mc.ahorrado.toFloat() / mc.meta.objetivo).coerceIn(0f, 1f) }, color = colorDe(mc.meta.color), modifier = Modifier.fillMaxWidth())
-                    Text("${FormatoPesos.pesos(mc.ahorrado)} de ${FormatoPesos.pesos(mc.meta.objetivo)} · faltan ${FormatoPesos.pesos(maxOf(mc.meta.objetivo - mc.ahorrado, 0))}", style = MaterialTheme.typography.bodySmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { moviendo = mc }) { Text("Abonar o retirar") }
-                        TextButton(onClick = { editando = mc.meta }) { Text("Editar") }
-                    }
+    Scaffold(
+        topBar = { Barra("Metas de ahorro", alVolver) },
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = { if (metas.isNotEmpty()) FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nueva meta") } },
+    ) { m ->
+        LazyColumn(Modifier.fillMaxSize().padding(m).padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 96.dp)) {
+            if (metas.isEmpty()) item {
+                EstadoVacio(Icons.Default.Savings, "Ahorren para algo juntos", "Un viaje, un fondo de emergencias… Abonar a una meta no cuenta como gasto.", "Crear meta") { creando = true }
+            } else item {
+                Tarjeta(color = MaterialTheme.colorScheme.primaryContainer) {
+                    Text("Total ahorrado", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Monto(metas.sumOf { it.ahorrado }, estilo = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onPrimaryContainer, peso = FontWeight.Bold)
                 }
-                HorizontalDivider()
+            }
+            items(metas, key = { it.meta.id }) { mc ->
+                val cumplida = mc.ahorrado >= mc.meta.objetivo
+                Tarjeta(alTocar = { editando = mc.meta }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        PuntoColor(mc.meta.color)
+                        Text(mc.meta.nombre, Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                        Text("${(100 * mc.ahorrado / mc.meta.objetivo).coerceAtMost(999)} %", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    BarraProgreso(mc.ahorrado.toFloat() / mc.meta.objetivo, color = colorDe(mc.meta.color))
+                    Text(
+                        if (cumplida) "¡Meta cumplida! ${FormatoPesos.pesos(mc.ahorrado)} ahorrados"
+                        else "${FormatoPesos.pesos(mc.ahorrado)} de ${FormatoPesos.pesos(mc.meta.objetivo)} · faltan ${FormatoPesos.pesos(mc.meta.objetivo - mc.ahorrado)}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    TextButton(onClick = { moviendo = mc }) { Text("Abonar o retirar") }
+                }
             }
         }
     }

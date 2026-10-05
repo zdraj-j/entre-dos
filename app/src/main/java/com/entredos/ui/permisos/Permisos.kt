@@ -13,6 +13,19 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.entredos.ui.comun.Tarjeta
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -81,16 +94,40 @@ fun recordarPermisos(): EstadoPermisos {
 fun PantallaPermisos(estado: EstadoPermisos, alContinuar: () -> Unit) {
     val c = LocalContext.current
     val pedirAvisos = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)) {
-        Text("Antes de empezar", style = MaterialTheme.typography.headlineSmall)
-        Text("Entre dos registra solo los gastos leyendo los avisos de tus bancos. El texto de las notificaciones nunca sale de tu teléfono.")
-        if (!estado.notificaciones) Button(onClick = { Permisos.abrirAccesoNotificaciones(c) }, Modifier.fillMaxWidth()) { Text("Dar acceso a notificaciones (obligatorio)") }
-        else Text("✓ Acceso a notificaciones")
-        if (!estado.bateria) OutlinedButton(onClick = { Permisos.pedirSinOptimizacion(c) }, Modifier.fillMaxWidth()) { Text("Quitar optimización de batería (recomendado)") }
-        else Text("✓ Sin optimización de batería")
-        if (!estado.avisos && Build.VERSION.SDK_INT >= 33) OutlinedButton(onClick = { pedirAvisos.launch(Manifest.permission.POST_NOTIFICATIONS) }, Modifier.fillMaxWidth()) { Text("Permitir avisos de la app (recomendado)") }
-        else Text("✓ Avisos de la app")
-        Text("En Xiaomi, Samsung y marcas parecidas, quitar la optimización de batería evita que Android apague la detección.", style = MaterialTheme.typography.bodySmall)
-        Button(onClick = alContinuar, enabled = estado.notificaciones, modifier = Modifier.fillMaxWidth()) { Text("Continuar") }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Spacer(Modifier.height(24.dp))
+        Text("Antes de empezar", style = MaterialTheme.typography.headlineMedium)
+        Text("Entre dos registra solo los gastos leyendo los avisos de tus bancos. El texto de las notificaciones nunca sale de tu teléfono.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TarjetaPermiso(
+            Icons.Default.Notifications, "Acceso a notificaciones", "Obligatorio. Es como la app ve los avisos del banco.",
+            estado.notificaciones, "Dar acceso",
+        ) { Permisos.abrirAccesoNotificaciones(c) }
+        TarjetaPermiso(
+            Icons.Default.BatteryChargingFull, "Sin optimización de batería", "Recomendado. Evita que Android apague la detección, sobre todo en Xiaomi y Samsung.",
+            estado.bateria, "Quitar optimización",
+        ) { Permisos.pedirSinOptimizacion(c) }
+        TarjetaPermiso(
+            Icons.Default.NotificationsActive, "Avisos de la app", "Recomendado. Para mostrarte \"Gasto detectado\" y clasificarlo con un toque.",
+            estado.avisos, "Permitir",
+        ) { if (Build.VERSION.SDK_INT >= 33) pedirAvisos.launch(Manifest.permission.POST_NOTIFICATIONS) }
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = alContinuar, enabled = estado.notificaciones, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Continuar") }
+    }
+}
+
+@Composable
+private fun TarjetaPermiso(icono: ImageVector, titulo: String, texto: String, listo: Boolean, accion: String, alPedir: () -> Unit) {
+    Tarjeta {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(if (listo) Icons.Default.CheckCircle else icono, contentDescription = null, tint = if (listo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(Modifier.weight(1f)) {
+                Text(titulo, style = MaterialTheme.typography.titleMedium)
+                Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        if (!listo) OutlinedButton(onClick = alPedir) { Text(accion) }
     }
 }

@@ -1,6 +1,14 @@
 package com.entredos.ui.pendientes
 
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.ui.Alignment
+import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Monto
+import com.entredos.ui.comun.Tarjeta
+import com.entredos.ui.comun.TituloPantalla
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -49,18 +57,20 @@ fun PantallaPendientes(vm: PendientesViewModel = hiltViewModel()) {
     val categorias by vm.categorias.collectAsState()
     var abierto by remember { mutableStateOf<GastoEntity?>(null) }
 
-    LazyColumn(Modifier.fillMaxSize()) {
-        item { Text("Pendientes por clasificar", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp)) }
-        if (pendientes.isEmpty()) item { Text("No hay gastos pendientes.", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    LazyColumn(Modifier.fillMaxSize().padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { TituloPantalla("Por clasificar", "Gastos detectados en los avisos de tus bancos", Modifier.padding(horizontal = 0.dp)) }
+        if (pendientes.isEmpty()) item { EstadoVacio(Icons.Default.DoneAll, "Todo clasificado", "Cuando llegue un aviso de tu banco que la app no pueda clasificar sola, aparecerá aquí.") }
         items(pendientes, key = { it.id }) { g ->
-            Row(Modifier.fillMaxWidth().clickable { abierto = g }.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(Modifier.weight(1f)) {
-                    Text(g.nombre)
-                    Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(g.fecha)), style = MaterialTheme.typography.bodySmall)
+            Tarjeta(alTocar = { abierto = g }) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(g.nombre, fontWeight = FontWeight.SemiBold)
+                        Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(g.fecha)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Monto(g.monto)
                 }
-                Text(FormatoPesos.pesos(g.monto), fontWeight = FontWeight.SemiBold)
+                Text("Toca para clasificar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
-            HorizontalDivider()
         }
     }
     abierto?.let { g -> VentanaClasificacion(g, categorias, obligatoria = false, vm = vm, alTerminar = { abierto = null }) }

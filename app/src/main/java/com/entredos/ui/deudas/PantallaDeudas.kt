@@ -1,6 +1,17 @@
 package com.entredos.ui.deudas
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.Alignment
+import com.entredos.ui.comun.Avatar
+import com.entredos.ui.comun.BarraProgreso
+import com.entredos.ui.comun.Dato
+import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Monto
+import com.entredos.ui.comun.Tarjeta
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -97,38 +108,62 @@ fun PantallaDeudas(alVolver: () -> Unit, vm: DeudasViewModel = hiltViewModel()) 
 
     Column(Modifier.fillMaxSize()) {
         Barra("Deudas", alVolver)
-        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
             item {
                 val neto = e.balance.neto
-                Text(
-                    when { neto > 0 -> "$pareja te debe ${FormatoPesos.pesos(neto)}"; neto < 0 -> "Le debes ${FormatoPesos.pesos(-neto)} a $pareja"; else -> "Están a mano" },
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Text("Tú debes ${FormatoPesos.pesos(e.balance.yoDebo)} · Te deben ${FormatoPesos.pesos(e.balance.meDeben)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val (titulo, fondo, tinta) = when {
+                    neto > 0 -> Triple("$pareja te debe", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+                    neto < 0 -> Triple("Le debes a $pareja", MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
+                    else -> Triple("Están a mano", MaterialTheme.colorScheme.surfaceContainerLowest, MaterialTheme.colorScheme.onSurface)
+                }
+                Tarjeta(color = fondo) {
+                    Text(titulo, style = MaterialTheme.typography.labelLarge, color = tinta)
+                    Monto(kotlin.math.abs(neto), estilo = MaterialTheme.typography.headlineMedium, color = tinta, peso = FontWeight.Bold)
+                    Text("Tú debes ${FormatoPesos.pesos(e.balance.yoDebo)} · Te deben ${FormatoPesos.pesos(e.balance.meDeben)}", style = MaterialTheme.typography.bodySmall, color = tinta)
+                }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                Row(Modifier.padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = vm::saldarTodo, enabled = e.abiertas.isNotEmpty()) { Text("Saldar todo") }
                     OutlinedButton(onClick = { agregando = true }, enabled = parejaUnida) { Text("Agregar deuda") }
                 }
-                if (!parejaUnida) Text("Las deudas empiezan cuando tu pareja se une al hogar.", style = MaterialTheme.typography.bodySmall)
-                Text("Pendientes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+                if (!parejaUnida) Text("Las deudas empiezan cuando tu pareja se une al hogar.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                Text("Pendientes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
             }
-            if (e.abiertas.isEmpty()) item { Text("No hay deudas pendientes.", Modifier.padding(vertical = 8.dp)) }
+            if (e.abiertas.isEmpty()) item { EstadoVacio(Icons.Default.CheckCircle, "Sin deudas pendientes", "Cuando uno pague algo que le toca al otro, aparecerá aquí.") }
             items(e.abiertas, key = { it.id }) { d ->
-                Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-                    Text(d.concepto, fontWeight = FontWeight.SemiBold)
-                    Text("${nombre(d.deudor)} → ${nombre(d.acreedor)} · ${FormatoPesos.pesos(d.pendiente)}" + if (d.abonado > 0) " (abonado ${FormatoPesos.pesos(d.abonado)} de ${FormatoPesos.pesos(d.monto)})" else "")
+                Tarjeta {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Avatar(nombreTitular(e.miembros, d.deudor))
+                        Column(Modifier.weight(1f)) {
+                            Text(d.concepto, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                when {
+                                    d.deudor == e.yo -> "Le debes a ${nombre(d.acreedor)}"
+                                    d.acreedor == e.yo -> "${nombre(d.deudor)} te debe"
+                                    else -> "${nombre(d.deudor)} le debe a ${nombre(d.acreedor)}"
+                                },
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Monto(d.pendiente)
+                    }
+                    if (d.abonado > 0) {
+                        BarraProgreso(d.abonado.toFloat() / d.monto)
+                        Text("Abonado ${FormatoPesos.pesos(d.abonado)} de ${FormatoPesos.pesos(d.monto)}", style = MaterialTheme.typography.bodySmall)
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { abonando = d }) { Text("Abonar") }
                         TextButton(onClick = { vm.saldar(d) }) { Text("Saldar") }
                     }
                 }
-                HorizontalDivider()
             }
-            item { Text("Historial de pagos", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) }
-            items(e.abonos.take(50), key = { it.id }) { a ->
-                Text("${DateFormat.getDateInstance().format(Date(a.fecha))} · ${FormatoPesos.pesos(a.monto)}" + if (a.porCierre) " · al cerrar el periodo" else "",
-                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp))
+            if (e.abonos.isNotEmpty()) item {
+                Tarjeta(Modifier.padding(top = 6.dp)) {
+                    Text("Historial de pagos", style = MaterialTheme.typography.titleMedium)
+                    e.abonos.take(50).forEach { a ->
+                        Dato(DateFormat.getDateInstance().format(Date(a.fecha)) + if (a.porCierre) " · al cerrar" else "", FormatoPesos.pesos(a.monto))
+                    }
+                }
             }
         }
     }

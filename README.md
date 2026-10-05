@@ -14,12 +14,13 @@ servidores de terceros.
 - **Deudas automáticas:** categoría de una persona pagada por la otra = deuda completa; compartida = la mitad o el reparto que se ajuste.
 - **Periodos:** cierre manual o automático, historial con estadísticas y descarga en CSV.
 - **Metas de ahorro, gastos recurrentes y reglas de comercio** que se aprenden con 3 confirmaciones.
+- **Widget de inicio** con lo disponible del periodo, lo gastado hoy y un botón para registrar; y acceso rápido "Nuevo gasto" al mantener presionado el ícono.
 - **Wifi en casa:** con la app abierta, los dos teléfonos se pasan los cambios directamente aunque no haya internet.
 - **Importar** desde otras apps (formato propio o cualquier CSV) y **exportar** un respaldo en el mismo formato.
 
 ## Tecnología
 
-Kotlin 2.0 · Jetpack Compose (Material 3) · Room · Hilt · WorkManager · kotlinx.serialization ·
+Kotlin 2.0 · Jetpack Compose (Material 3) · Glance (widget) · Room · Hilt · WorkManager · kotlinx.serialization ·
 Google Identity Services (permiso `drive.appdata`) · API REST de Drive v3 con `HttpURLConnection`.
 `minSdk 26`, `targetSdk 35`.
 
@@ -64,7 +65,7 @@ lista de cambios por subir. Si se escribe directo en un DAO, ese cambio no llega
 | 4 | Importador, avisos de gasto, pendientes | Hecha |
 | 5 | Proyecto completo: Gradle, navegación, todas las pantallas, cierre, exportación, lectura de notificaciones | Hecha |
 | 6 | Sincronización por wifi en casa, cifrada y solo entre teléfonos del hogar | Hecha |
-| 7 | Pulido visual de todas las pantallas, widget | Pendiente |
+| 7 | Pulido visual (tarjetas, montos alineados, estados vacíos) y widget de inicio | Hecha |
 
 **Probado:** 85 pruebas de la lógica pura (`core/`). **Sin probar en un dispositivo todavía:** todo lo de Android.
 Los nombres de paquete y textos de los bancos (`core/LectoresBancos.kt`) deben confirmarse con

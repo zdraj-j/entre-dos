@@ -1,6 +1,15 @@
 package com.entredos.ui.periodos
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import com.entredos.ui.comun.BarraProgreso
+import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Monto
+import com.entredos.ui.comun.MontoGrande
+import com.entredos.ui.comun.Tarjeta
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -70,19 +79,20 @@ fun PantallaPeriodos(alVolver: () -> Unit, alAbrir: (String) -> Unit, vm: Period
     val periodos by vm.periodos.collectAsState()
     Column(Modifier.fillMaxSize()) {
         Barra("Periodos anteriores", alVolver)
-        LazyColumn {
-            if (periodos.isEmpty()) item { Text("Aún no hay periodos cerrados.", Modifier.padding(16.dp)) }
+        LazyColumn(Modifier.padding(horizontal = MARGEN), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (periodos.isEmpty()) item { EstadoVacio(Icons.Default.History, "Aún no hay periodos cerrados", "Cuando cierren un periodo desde Resumen, o llegue el día de inicio en modo automático, quedará aquí con sus estadísticas.") }
             items(periodos, key = { it.id }) { p ->
                 val diferencia = p.totalPresupuestado - p.totalGastado
-                Column(Modifier.fillMaxWidth().clickable { alAbrir(p.id) }.padding(16.dp)) {
-                    Text("${dia(p.inicio)} – ${dia(p.fin)}", fontWeight = FontWeight.SemiBold)
-                    Text("Gastado ${FormatoPesos.pesos(p.totalGastado)} de ${FormatoPesos.pesos(p.totalPresupuestado)}")
+                Tarjeta(alTocar = { alAbrir(p.id) }) {
+                    Text("${dia(p.inicio)} – ${dia(p.fin)}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Monto(p.totalGastado, estilo = MaterialTheme.typography.titleLarge)
+                    if (p.totalPresupuestado > 0) BarraProgreso(p.totalGastado.toFloat() / p.totalPresupuestado, excedida = diferencia < 0)
                     Text(
-                        if (diferencia >= 0) "Quedó sin gastar ${FormatoPesos.pesos(diferencia)}" else "Se excedió ${FormatoPesos.pesos(-diferencia)}",
-                        color = if (diferencia < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        if (diferencia >= 0) "Quedó sin gastar ${FormatoPesos.pesos(diferencia)} de ${FormatoPesos.pesos(p.totalPresupuestado)}" else "Se excedió ${FormatoPesos.pesos(-diferencia)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (diferencia < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                HorizontalDivider()
             }
         }
     }
@@ -99,11 +109,12 @@ fun PantallaDetallePeriodo(id: String, alVolver: () -> Unit, vm: PeriodosViewMod
     Column(Modifier.fillMaxSize()) {
         Barra("Periodo", alVolver)
         val (p, r, gastos) = datos ?: return@Column
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-            Text("${dia(p.inicio)} – ${dia(p.fin)}", style = MaterialTheme.typography.titleLarge)
-            Dato("Gastado", FormatoPesos.pesos(p.totalGastado))
-            Dato("Presupuestado", FormatoPesos.pesos(p.totalPresupuestado))
-            if (r.importado) Text("Periodo armado al importar datos.", style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = MARGEN)) {
+            Tarjeta(Modifier.padding(vertical = 6.dp)) {
+                MontoGrande("${dia(p.inicio)} – ${dia(p.fin)}", p.totalGastado, "de ${FormatoPesos.pesos(p.totalPresupuestado)} presupuestados")
+                if (p.totalPresupuestado > 0) BarraProgreso(p.totalGastado.toFloat() / p.totalPresupuestado, excedida = p.totalGastado > p.totalPresupuestado)
+                if (r.importado) Text("Periodo armado al importar datos.", style = MaterialTheme.typography.bodySmall)
+            }
             Seccion("Quién gastó") { r.porPersona.forEach { Dato(it.nombre, FormatoPesos.pesos(it.total)) } }
             Seccion("Presupuestos") {
                 r.porCategoria.forEach { Dato(it.nombre, FormatoPesos.pesos(it.total) + (it.asignado?.let { a -> " de ${FormatoPesos.pesos(a)}" } ?: "")) }
@@ -127,7 +138,7 @@ fun PantallaDetallePeriodo(id: String, alVolver: () -> Unit, vm: PeriodosViewMod
                         ZoneId.systemDefault(),
                     ).toByteArray()
                 }
-            }, modifier = Modifier.padding(top = 16.dp)) { Text("Descargar CSV") }
+            }, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) { Text("Descargar CSV") }
         }
     }
 }

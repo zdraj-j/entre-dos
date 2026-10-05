@@ -34,6 +34,9 @@ import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.repository.ExportacionRepositorio
 import com.entredos.data.repository.HogarRepositorio
 import com.entredos.ui.comun.Dato
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.Tarjeta
+import com.entredos.ui.comun.TituloPantalla
 import com.entredos.ui.comun.Seccion
 import com.entredos.ui.comun.recordarGuardado
 import com.entredos.ui.hogar.SeccionSincronizacion
@@ -78,8 +81,9 @@ fun PantallaAjustes(
     var editandoHogar by remember { mutableStateOf(false) }
     var renombrando by remember { mutableStateOf<Miembro?>(null) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        Text("Ajustes", style = MaterialTheme.typography.titleLarge)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+        TituloPantalla("Ajustes", hogar?.nombre)
+        Column(Modifier.padding(horizontal = MARGEN)) {
         mensaje?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Seccion("Hogar") {
             Dato("Nombre", hogar?.nombre ?: "—", alTocar = { editandoHogar = true })
@@ -92,29 +96,27 @@ fun PantallaAjustes(
             Dato("Modo del periodo", if (hogar?.modoPeriodo == ModoPeriodo.AUTOMATICO) "Automático" else "Manual", alTocar = { editandoHogar = true })
             Text("Para que tu pareja se una, conecta en su teléfono la misma cuenta de Google del hogar.", style = MaterialTheme.typography.bodySmall)
         }
-        HorizontalDivider()
-        Seccion("Clasificación de gastos") { SeccionClasificacion() }
-        Dato("Detección y reglas", "", alTocar = alDeteccion)
-        HorizontalDivider()
+        Seccion("Clasificación de gastos") {
+            SeccionClasificacion()
+            Dato("Detección y reglas", "", alTocar = alDeteccion)
+        }
         Seccion("Deudas") {
             Text("Categoría de una persona pagada por la otra: el dueño debe todo. Categoría compartida: quien no pagó debe la mitad, o lo que se haya ajustado. Los gastos importados no generan deuda.", style = MaterialTheme.typography.bodySmall)
         }
-        HorizontalDivider()
         Seccion("Permisos") {
             Dato("Acceso a notificaciones", if (permisos.notificaciones) "Activo" else "Falta", alTocar = { Permisos.abrirAccesoNotificaciones(c) })
             Dato("Sin optimización de batería", if (permisos.bateria) "Activo" else "Falta", alTocar = { Permisos.pedirSinOptimizacion(c) })
             Dato("Avisos de la app", if (permisos.avisos) "Activo" else "Falta")
         }
-        HorizontalDivider()
-        Column(Modifier.padding(vertical = 8.dp)) { SeccionSincronizacion(alReconectar = alReconectar, alSalir = alSalir) }
-        HorizontalDivider()
-        Column(Modifier.padding(vertical = 8.dp)) { SeccionWifi() }
-        HorizontalDivider()
+        Tarjeta(Modifier.padding(vertical = 6.dp)) { SeccionSincronizacion(alReconectar = alReconectar, alSalir = alSalir) }
+        Tarjeta(Modifier.padding(vertical = 6.dp)) { SeccionWifi() }
         Seccion("Datos") {
             Dato("Importar y deshacer importaciones", "", alTocar = alImportaciones)
             Dato("Exportar respaldo (.zip)", "", alTocar = { guardarZip("respaldo-entre-dos.zip") { vm.respaldo().bytes } })
             Text("El respaldo usa el mismo formato del importador: sirve para guardar una copia o pasar los datos a otro hogar.", style = MaterialTheme.typography.bodySmall)
             Dato("Diagnóstico", "", alTocar = alDiagnostico)
+        }
+        Text("Entre dos ${com.entredos.BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 12.dp))
         }
     }
 

@@ -5,6 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,9 +64,17 @@ fun PantallaInicioHogar(alTerminar: () -> Unit, vm: InicioHogarViewModel = hiltV
     ) {
         when (val p = paso) {
             PasoInicio.Bienvenida, is PasoInicio.AbrirGoogle -> {
-                Text("Entre dos", style = MaterialTheme.typography.headlineMedium)
-                Text("Conecta la cuenta de Google del hogar. Es la misma en los dos teléfonos y ahí se guardan los datos.")
-                Button(onClick = vm::conectar, modifier = Modifier.fillMaxWidth()) { Text("Conectar cuenta del hogar") }
+                Box(
+                    Modifier.size(88.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape).align(Alignment.CenterHorizontally),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp)) }
+                Text("Entre dos", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(
+                    "El presupuesto de la casa, claro para los dos. Conecta la cuenta de Google del hogar: es la misma en los dos teléfonos y ahí se guardan los datos, en una carpeta que solo ve esta app.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+                )
+                Button(onClick = vm::conectar, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Conectar cuenta del hogar") }
+                Text("¿Es tu primera vez? Crea primero la cuenta de Gmail del hogar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
             is PasoInicio.Cargando -> {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
@@ -65,8 +82,8 @@ fun PantallaInicioHogar(alTerminar: () -> Unit, vm: InicioHogarViewModel = hiltV
             }
             PasoInicio.CrearHogar -> FormularioCrear(vm::crearHogar)
             is PasoInicio.ElegirQuienSoy -> {
-                Text(p.nombreHogar, style = MaterialTheme.typography.headlineSmall)
-                Text("¿Quién eres?")
+                Text(p.nombreHogar, style = MaterialTheme.typography.headlineMedium)
+                Text("¿Quién eres? Así recuperas tu lugar y todos tus datos.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 p.miembros.forEach { m ->
                     Button(onClick = { vm.soy(Miembro.valueOf(m.id)) }, modifier = Modifier.fillMaxWidth()) { Text("Soy ${m.nombre}") }
                 }

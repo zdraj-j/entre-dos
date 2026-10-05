@@ -37,3 +37,10 @@
 4. "Intercambiar ahora" funciona desde cualquiera de los dos.
 5. Con un tercer teléfono de otro hogar en la misma red: no intercambia nada (Ajustes no muestra pareja visible o muestra el error de autenticación).
 6. Al volver internet, todo sube a Drive igual: reinstalar en un teléfono y recuperar con "Soy …" trae también lo que se pasó por wifi.
+
+## Aspecto y widget
+1. Revisar en modo claro y oscuro: Movimientos, Presupuesto, Resumen, Deudas, Metas y Ajustes.
+2. Sin datos (hogar recién creado): cada pantalla muestra un estado vacío con qué hacer.
+3. Agregar el widget "Entre dos" a la pantalla de inicio: muestra lo disponible y lo de hoy; tras registrar un gasto se actualiza en un par de segundos.
+4. Con gastos por clasificar, el widget lo dice en naranja. "Nuevo gasto" abre el teclado.
+5. Mantener presionado el ícono de la app › "Nuevo gasto".

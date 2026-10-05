@@ -1,6 +1,15 @@
 package com.entredos.ui.presupuesto
 
 import androidx.compose.foundation.background
+import com.entredos.ui.comun.TituloPantalla
+import com.entredos.ui.comun.Tarjeta
+import com.entredos.ui.comun.MontoGrande
+import com.entredos.ui.comun.MARGEN
+import com.entredos.ui.comun.FilaCategoria
+import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.BarraProgreso
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -108,44 +117,41 @@ fun PantallaPresupuesto(alVerCategoria: (String?) -> Unit, vm: PresupuestoViewMo
     var creando by remember { mutableStateOf(false) }
     val p = e.periodo
 
-    Scaffold(floatingActionButton = { FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nueva categoría") } }) { margen ->
-        LazyColumn(Modifier.fillMaxSize().padding(margen)) {
-            item {
-                Column(Modifier.fillMaxWidth().clickable { alVerCategoria(null) }.padding(16.dp)) {
-                    Text("Presupuesto del periodo", style = MaterialTheme.typography.titleLarge)
-                    Text("Gastado ${FormatoPesos.pesos(p.gastado)} de ${FormatoPesos.pesos(p.asignado)}")
-                    Text(
-                        if (p.disponible >= 0) "Disponible ${FormatoPesos.pesos(p.disponible)}" else "Se pasaron ${FormatoPesos.pesos(-p.disponible)}",
-                        color = if (p.disponible < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
-                    )
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = { if (e.categorias.isNotEmpty()) FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Nueva categoría") } },
+    ) { margen ->
+        LazyColumn(Modifier.fillMaxSize().padding(margen), contentPadding = PaddingValues(bottom = 96.dp)) {
+            item { TituloPantalla("Presupuesto", "Lo asignado vale para todos los periodos hasta que lo cambies") }
+            if (e.categorias.isEmpty()) {
+                item {
+                    EstadoVacio(
+                        Icons.Default.Category, "Crea tus categorías",
+                        "Mercado, arriendo, transporte… Cada una puede ser compartida o de uno de los dos, con tope o sin tope.",
+                        "Crear categoría",
+                    ) { creando = true }
                 }
-                HorizontalDivider()
-            }
-            if (e.categorias.isEmpty()) item { Text("Aún no hay categorías. Crea la primera con el botón +.", Modifier.padding(16.dp)) }
-            items(e.categorias, key = { it.id }) { c ->
-                val est = p.porCategoria[c.id]
-                Row(Modifier.fillMaxWidth().clickable { alVerCategoria(c.id) }.padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(12.dp).background(colorDe(c.color), CircleShape))
-                    Spacer(Modifier.size(10.dp))
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(c.nombre, fontWeight = FontWeight.SemiBold)
-                        val gastado = est?.gastado ?: 0
-                        if (c.presupuesto != null) {
-                            LinearProgressIndicator(
-                                progress = { (gastado.toFloat() / c.presupuesto).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(),
-                                color = if (est?.excedida == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                            )
-                            Text(
-                                "${FormatoPesos.pesos(gastado)} de ${FormatoPesos.pesos(c.presupuesto)} · " +
-                                    if (est?.excedida == true) "excedida ${FormatoPesos.pesos(-(est.disponible ?: 0))}" else "quedan ${FormatoPesos.pesos(est?.disponible ?: c.presupuesto)}",
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        } else Text("${FormatoPesos.pesos(gastado)} · sin tope", style = MaterialTheme.typography.bodySmall)
-                        Text(responsableTexto(c.responsable, e.miembros), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                item {
+                    Tarjeta(Modifier.padding(horizontal = MARGEN, vertical = 6.dp), alTocar = { alVerCategoria(null) }) {
+                        MontoGrande(
+                            if (p.disponible >= 0) "Disponible del periodo" else "Se pasaron",
+                            kotlin.math.abs(p.disponible),
+                            "Gastado ${FormatoPesos.pesos(p.gastado)} de ${FormatoPesos.pesos(p.asignado)} asignados",
+                        )
+                        if (p.asignado > 0) BarraProgreso(p.gastado.toFloat() / p.asignado, excedida = p.disponible < 0)
                     }
-                    IconButton(onClick = { editando = c }) { Icon(Icons.Default.Edit, "Editar ${c.nombre}") }
                 }
-                HorizontalDivider()
+                item {
+                    Tarjeta(Modifier.padding(horizontal = MARGEN, vertical = 6.dp)) {
+                        e.categorias.forEach { c ->
+                            FilaCategoria(c.nombre, c.color, p.porCategoria[c.id]?.gastado ?: 0, c.presupuesto, alTocar = { alVerCategoria(c.id) }) {
+                                IconButton(onClick = { editando = c }) { Icon(Icons.Default.Edit, "Editar ${c.nombre}", tint = MaterialTheme.colorScheme.outline) }
+                            }
+                            Text(responsableTexto(c.responsable, e.miembros), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 22.dp, bottom = 6.dp))
+                        }
+                    }
+                }
             }
         }
     }
