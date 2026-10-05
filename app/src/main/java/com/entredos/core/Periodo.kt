@@ -32,4 +32,18 @@ object Periodo {
         return if (hoy.dayOfMonth >= diaInicio) hoy.withDayOfMonth(diaInicio)
         else hoy.minusMonths(1).withDayOfMonth(diaInicio)
     }
+
+    /**
+     * Modo automático: el periodo que ya terminó y aún no tiene cierre, como (inicio, fin).
+     * Si la app no se abrió en meses, el hueco queda en un solo periodo desde el último cierre.
+     * Null si no hay nada que archivar.
+     */
+    fun pendienteDeArchivar(modo: ModoPeriodo, diaInicio: Int, ultimoCierre: Long?, hoy: LocalDate, zona: ZoneId): Pair<Long, Long>? {
+        if (modo != ModoPeriodo.AUTOMATICO) return null
+        val inicioActual = ultimoDiaDeInicio(diaInicio, hoy)
+        val fin = inicioActual.atStartOfDay(zona).toInstant().toEpochMilli()
+        if (ultimoCierre != null && ultimoCierre >= fin) return null
+        val inicio = ultimoCierre ?: inicioActual.minusMonths(1).atStartOfDay(zona).toInstant().toEpochMilli()
+        return inicio to fin
+    }
 }

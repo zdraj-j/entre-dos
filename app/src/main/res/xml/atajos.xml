@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Acceso rápido al mantener presionado el ícono: abre directo el teclado. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="nuevo_gasto"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/atajo_nuevo_gasto">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.entredos"
+            android:targetClass="com.entredos.MainActivity" />
+    </shortcut>
+</shortcuts>

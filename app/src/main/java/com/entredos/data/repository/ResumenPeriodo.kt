@@ -13,4 +13,4 @@ data class ResumenPeriodo(
 )
 
 @Serializable
-data class TotalNombre(val id: String? = null, val nombre: String, val total: Long)
+data class TotalNombre(val id: String? = null, val nombre: String, val total: Long, val asignado: Long? = null)

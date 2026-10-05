@@ -31,11 +31,14 @@ import java.util.Locale
 
 /** [alAbrir] recibe el id del gasto para editarlo (pantalla de edición existente). */
 @Composable
-fun PantallaMovimientos(alAbrir: (String) -> Unit, vm: MovimientosViewModel = hiltViewModel()) {
+fun PantallaMovimientos(alAbrir: (String) -> Unit, alPendientes: () -> Unit, pendientes: Int, vm: MovimientosViewModel = hiltViewModel()) {
     val e by vm.estado.collectAsState()
     val formatoDia = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale("es", "CO"))
 
     Column(Modifier.fillMaxSize()) {
+        if (pendientes > 0) androidx.compose.material3.TextButton(onClick = alPendientes, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text("Pendientes por clasificar: $pendientes")
+        }
         OutlinedTextField(
             e.filtro.texto, vm::buscar, placeholder = { Text("Buscar por nombre o comercio") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

@@ -51,7 +51,7 @@ class AvisosGasto @Inject constructor(@ApplicationContext private val context: C
             putExtra(EXTRA_GASTO_PENDIENTE, gasto.id)
         }
         val aviso = NotificationCompat.Builder(context, CANAL_DETECTADOS)
-            .setSmallIcon(android.R.drawable.ic_menu_add) // cámbialo por el ícono de la app
+            .setSmallIcon(com.entredos.R.drawable.ic_notificacion)
             .setContentTitle("Gasto detectado: ${FormatoPesos.pesos(gasto.monto)}")
             .setContentText(gasto.nombre)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -70,7 +70,7 @@ class AvisosGasto @Inject constructor(@ApplicationContext private val context: C
 
     fun registrado(gasto: GastoEntity, categoria: String) {
         val aviso = NotificationCompat.Builder(context, CANAL_REGISTRADOS)
-            .setSmallIcon(android.R.drawable.ic_menu_save)
+            .setSmallIcon(com.entredos.R.drawable.ic_notificacion)
             .setContentTitle("Gasto registrado")
             .setContentText("${FormatoPesos.pesos(gasto.monto)} en $categoria")
             .setTimeoutAfter(4_000)

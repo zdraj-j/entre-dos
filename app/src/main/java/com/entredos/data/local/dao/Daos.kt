@@ -79,6 +79,12 @@ data class GastoConPartes(
 
 @Dao
 interface GastoDao {
+    @Transaction
+    @Query(
+        """SELECT * FROM gasto WHERE sync_eliminado = 0 AND estado = 'CONFIRMADO'
+           AND fecha >= :desde AND fecha < :hasta ORDER BY fecha"""
+    )
+    suspend fun confirmadosEntre(desde: Long, hasta: Long): List<GastoConPartes>
     /** Para detectar posibles duplicados al importar gastos sin id_origen. */
     @Query("SELECT fecha, monto, COALESCE(comercio, nombre) AS texto FROM gasto WHERE sync_eliminado = 0 AND estado != 'IGNORADO'")
     suspend fun huellas(): List<HuellaGasto>

@@ -46,7 +46,7 @@ class MovimientosViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val filtro = MutableStateFlow(FiltroMovimientos(categoriaId = guardado.get<String>("categoriaId")))
-    private val soloPeriodo = MutableStateFlow(true)
+    private val soloPeriodo = MutableStateFlow(guardado.get<Boolean>("todos") != true)
 
     private val gastos = soloPeriodo.flatMapLatest { solo ->
         (if (solo) periodo.observarInicio() else flowOf(0L)).flatMapLatest { desde ->
