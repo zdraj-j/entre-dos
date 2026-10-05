@@ -247,6 +247,8 @@ data class DispositivoLocalEntity(
     @PrimaryKey val clave: Int = 1,
     val dispositivoId: String,
     val miembro: Miembro?,
+    /** Último archivo cambios-<dispositivo>-<secuencia>.json que subió este teléfono. */
+    val ultimaSecuenciaSubida: Long = 0,
 )
 
 /** Cambio guardado en este teléfono que falta subir. */
@@ -257,6 +259,8 @@ data class CambioPendienteEntity(
     val registroId: String,
     val json: String,
     val hlc: String,
+    val dispositivo: String,
+    val eliminado: Boolean,
 )
 
 /** Archivo de cambios (de Drive o del wifi) que ya se aplicó en este teléfono. */

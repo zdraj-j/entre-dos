@@ -36,6 +36,8 @@ class Escritor @Inject constructor(
                     registroId = nueva.id,
                     json = JSON.encodeToString(tabla.serializer, nueva),
                     hlc = marca,
+                    dispositivo = dispositivoId,
+                    eliminado = nueva.sync.eliminado,
                 )
             )
             nueva

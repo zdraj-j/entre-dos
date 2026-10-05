@@ -38,6 +38,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HogarDao {
     @Upsert suspend fun upsert(e: HogarEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM hogar") suspend fun todosConEliminados(): List<HogarEntity>
     @Query("SELECT * FROM hogar WHERE sync_eliminado = 0 LIMIT 1") fun observar(): Flow<HogarEntity?>
     @Query("SELECT * FROM hogar LIMIT 1") suspend fun actual(): HogarEntity?
     @Query("SELECT * FROM hogar WHERE id = :id") suspend fun porId(id: String): HogarEntity?
@@ -46,6 +48,8 @@ interface HogarDao {
 @Dao
 interface MiembroDao {
     @Upsert suspend fun upsert(e: MiembroEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM miembro") suspend fun todosConEliminados(): List<MiembroEntity>
     @Query("SELECT * FROM miembro WHERE sync_eliminado = 0 ORDER BY id") fun observar(): Flow<List<MiembroEntity>>
     @Query("SELECT * FROM miembro WHERE sync_eliminado = 0 ORDER BY id") suspend fun todos(): List<MiembroEntity>
     @Query("SELECT * FROM miembro WHERE id = :id") suspend fun porId(id: String): MiembroEntity?
@@ -54,6 +58,8 @@ interface MiembroDao {
 @Dao
 interface CategoriaDao {
     @Upsert suspend fun upsert(e: CategoriaEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM categoria") suspend fun todosConEliminados(): List<CategoriaEntity>
     @Query("SELECT * FROM categoria WHERE sync_eliminado = 0 ORDER BY destacada DESC, orden, nombre")
     fun observar(): Flow<List<CategoriaEntity>>
     @Query("SELECT * FROM categoria WHERE sync_eliminado = 0 ORDER BY destacada DESC, orden, nombre")
@@ -71,6 +77,8 @@ data class GastoConPartes(
 @Dao
 interface GastoDao {
     @Upsert suspend fun upsert(e: GastoEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM gasto") suspend fun todosConEliminados(): List<GastoEntity>
     @Query("SELECT * FROM gasto WHERE id = :id") suspend fun porId(id: String): GastoEntity?
 
     @Transaction
@@ -106,6 +114,8 @@ interface GastoDao {
 @Dao
 interface ParteGastoDao {
     @Upsert suspend fun upsert(e: ParteGastoEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM parte_gasto") suspend fun todosConEliminados(): List<ParteGastoEntity>
     @Query("SELECT * FROM parte_gasto WHERE id = :id") suspend fun porId(id: String): ParteGastoEntity?
     @Query("SELECT * FROM parte_gasto WHERE gastoId = :gastoId AND sync_eliminado = 0")
     suspend fun porGasto(gastoId: String): List<ParteGastoEntity>
@@ -125,6 +135,8 @@ interface ParteGastoDao {
 @Dao
 interface DeudaManualDao {
     @Upsert suspend fun upsert(e: DeudaManualEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM deuda_manual") suspend fun todosConEliminados(): List<DeudaManualEntity>
     @Query("SELECT * FROM deuda_manual WHERE id = :id") suspend fun porId(id: String): DeudaManualEntity?
     @Query(
         """SELECT id, deudor, acreedor, monto, concepto, fecha FROM deuda_manual
@@ -138,6 +150,8 @@ data class AbonoTotal(val deudaId: String, val total: Long)
 @Dao
 interface AbonoDao {
     @Upsert suspend fun upsert(e: AbonoEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM abono") suspend fun todosConEliminados(): List<AbonoEntity>
     @Query("SELECT * FROM abono WHERE id = :id") suspend fun porId(id: String): AbonoEntity?
     @Query("SELECT deudaId, SUM(monto) AS total FROM abono WHERE sync_eliminado = 0 GROUP BY deudaId")
     fun observarTotales(): Flow<List<AbonoTotal>>
@@ -150,6 +164,8 @@ interface AbonoDao {
 @Dao
 interface PeriodoCerradoDao {
     @Upsert suspend fun upsert(e: PeriodoCerradoEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM periodo_cerrado") suspend fun todosConEliminados(): List<PeriodoCerradoEntity>
     @Query("SELECT * FROM periodo_cerrado WHERE id = :id") suspend fun porId(id: String): PeriodoCerradoEntity?
     @Query("SELECT * FROM periodo_cerrado WHERE sync_eliminado = 0 ORDER BY fin DESC")
     fun observar(): Flow<List<PeriodoCerradoEntity>>
@@ -161,6 +177,8 @@ interface PeriodoCerradoDao {
 @Dao
 interface MetaDao {
     @Upsert suspend fun upsert(e: MetaEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM meta") suspend fun todosConEliminados(): List<MetaEntity>
     @Query("SELECT * FROM meta WHERE sync_eliminado = 0 ORDER BY nombre") fun observar(): Flow<List<MetaEntity>>
     @Query("SELECT * FROM meta WHERE id = :id") suspend fun porId(id: String): MetaEntity?
 }
@@ -170,6 +188,8 @@ data class AhorroMeta(val metaId: String, val total: Long)
 @Dao
 interface MovimientoMetaDao {
     @Upsert suspend fun upsert(e: MovimientoMetaEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM movimiento_meta") suspend fun todosConEliminados(): List<MovimientoMetaEntity>
     @Query("SELECT * FROM movimiento_meta WHERE id = :id") suspend fun porId(id: String): MovimientoMetaEntity?
     @Query("SELECT metaId, SUM(monto) AS total FROM movimiento_meta WHERE sync_eliminado = 0 GROUP BY metaId")
     fun observarAhorros(): Flow<List<AhorroMeta>>
@@ -178,6 +198,8 @@ interface MovimientoMetaDao {
 @Dao
 interface RecurrenteDao {
     @Upsert suspend fun upsert(e: RecurrenteEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM recurrente") suspend fun todosConEliminados(): List<RecurrenteEntity>
     @Query("SELECT * FROM recurrente WHERE id = :id") suspend fun porId(id: String): RecurrenteEntity?
     @Query("SELECT * FROM recurrente WHERE sync_eliminado = 0 ORDER BY nombre") fun observar(): Flow<List<RecurrenteEntity>>
     @Query("SELECT * FROM recurrente WHERE sync_eliminado = 0 AND palabraComercio IS NOT NULL")
@@ -187,6 +209,8 @@ interface RecurrenteDao {
 @Dao
 interface ReglaComercioDao {
     @Upsert suspend fun upsert(e: ReglaComercioEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM regla_comercio") suspend fun todosConEliminados(): List<ReglaComercioEntity>
     @Query("SELECT * FROM regla_comercio WHERE id = :id") suspend fun porId(id: String): ReglaComercioEntity?
     @Query("SELECT * FROM regla_comercio WHERE sync_eliminado = 0 ORDER BY palabra") fun observar(): Flow<List<ReglaComercioEntity>>
     @Query("SELECT * FROM regla_comercio WHERE sync_eliminado = 0") suspend fun todas(): List<ReglaComercioEntity>
@@ -195,6 +219,8 @@ interface ReglaComercioDao {
 @Dao
 interface LoteImportacionDao {
     @Upsert suspend fun upsert(e: LoteImportacionEntity)
+    /** Para fotos: incluye los eliminados. */
+    @Query("SELECT * FROM lote_importacion") suspend fun todosConEliminados(): List<LoteImportacionEntity>
     @Query("SELECT * FROM lote_importacion WHERE id = :id") suspend fun porId(id: String): LoteImportacionEntity?
     @Query("SELECT * FROM lote_importacion WHERE sync_eliminado = 0 ORDER BY fecha DESC")
     fun observar(): Flow<List<LoteImportacionEntity>>
@@ -207,6 +233,8 @@ interface DispositivoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun guardar(e: DispositivoLocalEntity)
     @Query("SELECT * FROM dispositivo_local WHERE clave = 1") suspend fun actual(): DispositivoLocalEntity?
     @Query("SELECT * FROM dispositivo_local WHERE clave = 1") fun observar(): Flow<DispositivoLocalEntity?>
+    @Query("UPDATE dispositivo_local SET ultimaSecuenciaSubida = :secuencia WHERE clave = 1")
+    suspend fun guardarSecuencia(secuencia: Long)
 }
 
 @Dao
@@ -222,7 +250,9 @@ interface CambioPendienteDao {
 @Dao
 interface ArchivoAplicadoDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertar(e: ArchivoAplicadoEntity)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertarVarios(e: List<ArchivoAplicadoEntity>)
     @Query("SELECT EXISTS(SELECT 1 FROM archivo_aplicado WHERE nombre = :nombre)") suspend fun existe(nombre: String): Boolean
+    @Query("SELECT nombre FROM archivo_aplicado") suspend fun nombres(): List<String>
 }
 
 @Dao

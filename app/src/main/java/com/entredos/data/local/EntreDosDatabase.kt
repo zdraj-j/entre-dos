@@ -37,7 +37,7 @@ import com.entredos.data.local.entity.RecurrenteEntity
 import com.entredos.data.local.entity.ReglaComercioEntity
 
 @Database(
-    version = 1,
+    version = 2,
     exportSchema = true,
     entities = [
         HogarEntity::class, MiembroEntity::class, CategoriaEntity::class,
