@@ -57,7 +57,8 @@ object LectoresBancos {
             else -> false
         }
         if (descartar) return ResultadoLector.Descartada
-        val lectura = LectorGenerico.leer(titulo, texto) ?: return ResultadoLector.Descartada
+        val lectura = LectorGenerico.leer(titulo, texto, montoSinSigno = banco == Banco.BANCO_DE_BOGOTA)
+            ?: return ResultadoLector.Descartada
         return ResultadoLector.Gasto(banco, lectura)
     }
 }

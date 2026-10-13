@@ -26,6 +26,31 @@ class LectoresBancosTest {
         assertEquals(ResultadoLector.Gasto(Banco.BANCO_DE_BOGOTA, LecturaNotificacion(40_000, "ARA CENTRO")), r)
     }
 
+    @Test fun smsBancoDeBogotaConMontoSinSigno() {
+        fun leer(texto: String) = LectoresBancos.leer("com.samsung.android.messaging", "85264", texto)
+        assertEquals(
+            ResultadoLector.Gasto(Banco.BANCO_DE_BOGOTA, LecturaNotificacion(20_900, "PUNTO REMATES CALI")),
+            leer("Banco de Bogota: Tu compra por 20,900 fue aprobada con Tarjeta Débito 0150 el 11/10/26 14:34:21 en PUNTO REMATES CALI ¿Dudas? Llama a la Servilinea ..."),
+        )
+        assertEquals(
+            ResultadoLector.Gasto(Banco.BANCO_DE_BOGOTA, LecturaNotificacion(18_000, "MERCADOPAGO COLOMBIA")),
+            leer("Banco de Bogota: Tu compra por 18,000 fue aprobada con Tarjeta Débito 0150 el 11/10/26 18:42:47 en MERCADOPAGO COLOMBIA L3147735807 ¿Dudas? Llama a la Servilinea ..."),
+        )
+        assertEquals(
+            ResultadoLector.Gasto(Banco.BANCO_DE_BOGOTA, LecturaNotificacion(38_855, "DROGUERIAS Y FARMACIASCALI")),
+            leer("Banco de Bogota: Tu compra por 38,855 fue aprobada con Tarjeta Débito 0150 el 12/10/26 11:40:06 en DROGUERIAS Y FARMACIASCALI ¿Dudas? Llama a la Servilinea ..."),
+        )
+        assertEquals(
+            ResultadoLector.Gasto(Banco.BANCO_DE_BOGOTA, LecturaNotificacion(1_250_000, "ALKOSTO")),
+            LectoresBancos.leer("com.google.android.apps.messaging", "Banco de Bogotá", "Tu compra por 1,250,000 fue aprobada con Tarjeta Crédito 1234 el 12/10/26 10:00:00 en ALKOSTO ¿Dudas?"),
+        )
+    }
+
+    @Test fun montoSinSignoSoloParaElBancoDeBogota() {
+        assertEquals(ResultadoLector.Descartada, LectoresBancos.leer("com.davivienda.daviviendaapp", null, "Tu compra por 20,900 fue aprobada en X"))
+        assertEquals(null, LectorGenerico.leer(null, "Tu compra por 20,900 fue aprobada en X"))
+    }
+
     @Test fun rappiSoloTarjetaYSinEstadosDelPedido() {
         assertEquals(ResultadoLector.Descartada, LectoresBancos.leer("com.grability.rappi", "Rappi", "Tu pedido de $35.000 va en camino"))
         assertEquals(ResultadoLector.Descartada, LectoresBancos.leer("com.grability.rappi", "Rappi", "Pagaste $35.000 en Crepes"))
