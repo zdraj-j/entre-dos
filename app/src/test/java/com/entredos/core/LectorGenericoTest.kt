@@ -44,6 +44,12 @@ class LectorGenericoTest {
         assertNull(LectorGenerico.leer("Banco", "Usa tu tarjeta en tus compras y acumula puntos: cada $1.000 suma"))
     }
 
+    @Test fun transferenciasNoSonGasto() {
+        assertNull(LectorGenerico.leer("Bancolombia", "Transferiste $500.000 desde tu cuenta *1234 a la cuenta *9876"))
+        assertNull(LectorGenerico.leer("Banco", "Transferencia exitosa por $200.000 a JUAN PEREZ"))
+        assertEquals(LecturaNotificacion(89_000, "EPM"), LectorGenerico.leer("Banco", "Transferencia exitosa por $89.000 por PSE en EPM"))
+    }
+
     @Test fun sinMovimientoNoEsGasto() {
         assertNull(LectorGenerico.leer("Tienda", "Nuevo iPhone a $4.999.900 en tiendas"))
         assertNull(LectorGenerico.leer("Banco", "Tu saldo es $350.000"))

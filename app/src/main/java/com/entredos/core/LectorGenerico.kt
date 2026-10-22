@@ -33,6 +33,10 @@ object LectorGenerico {
         RegexOption.IGNORE_CASE,
     )
 
+    /** La app solo lleva gastos: las transferencias entre cuentas o a personas no entran (un pago PSE sí). */
+    private val TRANSFERENCIA = Regex("""\b(transferiste|te transfiri[oó]|transferencia (a|de|desde|entre|por|realizada|exitosa)\b)""", RegexOption.IGNORE_CASE)
+    private val PSE = Regex("""\bpse\b""", RegexOption.IGNORE_CASE)
+
     /** Algo tiene que decir que salió plata: compra, pago, retiro, transacción, débito, cobro… */
     private val MOVIMIENTO = Regex(
         """\b(compr|pag[oóa]|retir|avance|transacci|transfer|debit|d[eé]bito autom|cargo|cobr|consumo|realiz|usaste|usad[ao]|uso de)""",
@@ -60,6 +64,7 @@ object LectorGenerico {
     fun leer(titulo: String?, texto: String?, montoSinSigno: Boolean = false): LecturaNotificacion? {
         val completo = listOfNotNull(titulo, texto).joinToString(". ").replace('\u00A0', ' ')
         if (completo.isBlank() || DESCARTAR.containsMatchIn(completo) || PUBLICIDAD.containsMatchIn(completo)) return null
+        if (TRANSFERENCIA.containsMatchIn(completo) && !PSE.containsMatchIn(completo)) return null
         if (!MOVIMIENTO.containsMatchIn(completo)) return null
         val monto = buscarMonto(completo, MONTO)
             ?: (if (montoSinSigno) buscarMonto(completo, MONTO_SIN_SIGNO) else null)

@@ -105,7 +105,6 @@ class GastosViewModel @Inject constructor(
 
     /** Desde la hoja "Otra": una o varias categorías (partes iguales). */
     fun confirmarVarias(g: GastoEntity, ids: List<String>) = hacer(g) { gastos.confirmarPendiente(g, g.nombre, gastos.partesIguales(g.monto, ids)) }
-    fun transferencia(g: GastoEntity) = hacer(g) { gastos.confirmarPendiente(g, g.nombre, emptyList(), transferencia = true) }
     fun noEsGasto(g: GastoEntity) = hacer(g) { gastos.ignorar(g) }
 
     private fun hacer(g: GastoEntity, accion: suspend () -> Unit) {

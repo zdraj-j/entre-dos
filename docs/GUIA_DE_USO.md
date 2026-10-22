@@ -26,7 +26,7 @@ Para los dos. Cómo se usa la app en el día a día.
 
 - Cuando llega un aviso del banco, la app crea el gasto. Si sabe la categoría (porque ya aprendió el comercio o es un gasto fijo), lo guarda sola.
 - Si no, aparece arriba en **Por confirmar**, en un recuadro naranja aparte de los gastos ya completos. Cada uno dice a quién le llegó el aviso, la fecha y la hora, y desde qué banco se pagó (en un SMS, el banco que nombra el mensaje).
-- Toca uno para ver las categorías: las dos más probables van primero y resaltadas; un toque y listo. **Varias categorías, transferencia o no es gasto** abre la hoja completa para repartirlo, marcarlo como **transferencia** o decir que **no es un gasto**.
+- Toca uno para ver las categorías: las dos más probables van primero y resaltadas; un toque y listo. **Varias categorías o no es un gasto** abre la hoja completa para repartirlo entre varias categorías o decir que **no es un gasto** (por ejemplo, si pasaste plata a otra cuenta o a otra persona): desaparece y no cuenta.
 - No se anotan como gasto la publicidad ni los recordatorios (ofertas, descuentos, créditos preaprobados, enlaces, fechas de pago…): el aviso tiene que decir que salió plata (compra, pago, retiro, cobro…).
 - También puedes confirmar desde el aviso del teléfono, sin abrir la app.
 - La pestaña Gastos muestra un número cuando hay algo por confirmar.
@@ -59,7 +59,7 @@ casa activo, los dos teléfonos se pasan los cambios aunque el módem no tenga i
 **Un gasto del banco no apareció.** Revisa en Ajustes › Permisos que el acceso a notificaciones esté activo y que la
 app no esté optimizada por batería. En Ajustes › Diagnóstico ves qué avisos llegaron y qué hizo la app con cada uno.
 
-**¿Las transferencias cuentan?** No. Un gasto marcado como transferencia no suma al mes ni genera deuda.
+**¿Y las transferencias?** La app solo lleva gastos. Si detecta una transferencia (a otra cuenta, al ahorro o a otra persona), toca **No es un gasto**.
 
 **¿Qué ve mi pareja?** Todo lo del hogar: gastos, categorías, deudas y meses. Lo único que no se comparte es el texto
 original de los avisos del banco.

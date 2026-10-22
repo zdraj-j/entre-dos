@@ -23,7 +23,6 @@ fun VentanaDesdeAviso(gastoId: String, alTerminar: () -> Unit, vm: GastosViewMod
         HojaCategoria(
             gasto = g, categorias = e.categorias, obligatoria = true,
             alGuardar = { vm.confirmarVarias(g, it); alTerminar() },
-            alTransferencia = { vm.transferencia(g); alTerminar() },
             alNoEsGasto = { vm.noEsGasto(g); alTerminar() },
             alCerrar = alTerminar,
         )

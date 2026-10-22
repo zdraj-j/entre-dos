@@ -11,7 +11,6 @@ import com.entredos.core.Miembro
 import com.entredos.core.ModoPeriodo
 import com.entredos.core.OrigenGasto
 import com.entredos.core.Responsable
-import com.entredos.core.TipoGasto
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -90,7 +89,6 @@ data class GastoEntity(
     val comercio: String? = null,
     val fecha: Long,
     val pagadoPor: Miembro,
-    val tipo: TipoGasto = TipoGasto.GASTO,
     val estado: EstadoGasto = EstadoGasto.CONFIRMADO,
     val origen: OrigenGasto = OrigenGasto.MANUAL,
     /** Paquete de la app bancaria que lo detectó (solo origen NOTIFICACION). */

@@ -173,7 +173,6 @@ fun PantallaGastos(alEditar: (String) -> Unit, vm: GastosViewModel = hiltViewMod
         HojaCategoria(
             gasto = g, categorias = e.categorias, obligatoria = false,
             alGuardar = { vm.confirmarVarias(g, it); hoja = null },
-            alTransferencia = { vm.transferencia(g); hoja = null },
             alNoEsGasto = { vm.noEsGasto(g); hoja = null },
             alCerrar = { hoja = null },
         )
@@ -239,7 +238,7 @@ private fun PorConfirmarFila(
                     }
                 }
                 TextButton(onClick = alMas, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                    Text("Varias categorías, transferencia o no es gasto", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Varias categorías o no es un gasto", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

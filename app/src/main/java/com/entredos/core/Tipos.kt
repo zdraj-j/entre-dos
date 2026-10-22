@@ -10,8 +10,6 @@ enum class Miembro {
 /** De quién es una categoría. Decide cómo se reparte cada gasto. */
 enum class Responsable { A, B, COMPARTIDA }
 
-enum class TipoGasto { GASTO, TRANSFERENCIA }
-
 enum class EstadoGasto { PENDIENTE, CONFIRMADO, IGNORADO }
 
 enum class OrigenGasto { MANUAL, NOTIFICACION, IMPORTACION }

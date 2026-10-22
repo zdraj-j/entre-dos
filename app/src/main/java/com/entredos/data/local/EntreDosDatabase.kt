@@ -65,10 +65,30 @@ abstract class EntreDosDatabase : RoomDatabase() {
     companion object {
         const val NOMBRE = "entre_dos.db"
 
-        /** 3 → 4: el gasto guarda el banco del que salió el pago. */
+        /**
+         * 3 → 4: el gasto guarda el banco del que salió el pago y deja de tener tipo (ya no hay
+         * transferencias: las que había quedan ignoradas, como "No es un gasto"). SQLite de
+         * Android 8 no tiene DROP COLUMN, así que la tabla se copia a una nueva.
+         */
         val MIGRACION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE gasto ADD COLUMN banco TEXT")
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS `gasto_nueva` (`id` TEXT NOT NULL, `monto` INTEGER NOT NULL, `nombre` TEXT NOT NULL,
+                       `comercio` TEXT, `fecha` INTEGER NOT NULL, `pagadoPor` TEXT NOT NULL, `estado` TEXT NOT NULL, `origen` TEXT NOT NULL,
+                       `appBanco` TEXT, `banco` TEXT, `loteImportacion` TEXT, `idOrigen` TEXT, `sync_actualizadoEn` TEXT NOT NULL,
+                       `sync_actualizadoPor` TEXT NOT NULL, `sync_eliminado` INTEGER NOT NULL, PRIMARY KEY(`id`))"""
+                )
+                db.execSQL(
+                    """INSERT INTO `gasto_nueva` (id, monto, nombre, comercio, fecha, pagadoPor, estado, origen, appBanco, banco,
+                       loteImportacion, idOrigen, sync_actualizadoEn, sync_actualizadoPor, sync_eliminado)
+                       SELECT id, monto, nombre, comercio, fecha, pagadoPor, CASE WHEN tipo = 'TRANSFERENCIA' THEN 'IGNORADO' ELSE estado END,
+                       origen, appBanco, NULL, loteImportacion, idOrigen, sync_actualizadoEn, sync_actualizadoPor, sync_eliminado FROM `gasto`"""
+                )
+                db.execSQL("DROP TABLE `gasto`")
+                db.execSQL("ALTER TABLE `gasto_nueva` RENAME TO `gasto`")
+                for (columna in listOf("fecha", "estado", "loteImportacion", "idOrigen")) {
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_gasto_$columna` ON `gasto` (`$columna`)")
+                }
             }
         }
     }

@@ -40,14 +40,13 @@ class EstadisticasYExportacionTest {
 
     @Test fun elRespaldoSeVuelveAImportarIgual() {
         val gastos = listOf(
-            GastoExport("g1", ms(9, 5), Miembro.A, "Compra, Éxito", "Éxito", false, listOf(
+            GastoExport("g1", ms(9, 5), Miembro.A, "Compra, Éxito", "Éxito", listOf(
                 ParteExport("Mercado", Responsable.COMPARTIDA, 60_000, 30_000, 30_000),
                 ParteExport("Aseo", Responsable.COMPARTIDA, 25_001, 12_501, 12_500),
             )),
-            GastoExport("g2", ms(9, 10), Miembro.B, "Internet", "Claro", false, listOf(
+            GastoExport("g2", ms(9, 10), Miembro.B, "Internet", "Claro", listOf(
                 ParteExport("Servicios", Responsable.COMPARTIDA, 100_000, 40_000, 60_000),
             )),
-            GastoExport("g3", ms(9, 12), Miembro.A, "Al ahorro", null, true, listOf(ParteExport("Ahorro", Responsable.A, 200_000, 200_000, 0))),
         )
         val archivos = ExportadorEntreDos.archivos(
             gastos,
@@ -58,11 +57,10 @@ class EstadisticasYExportacionTest {
         val leido = FormatoEntreDos.gastos(LectorCsv.leer(archivos.getValue("gastos.csv")), bogota)
         assertEquals(0, leido.errores.size)
         val agrupado = PlanImportador.agrupar(leido.filas).filas
-        assertEquals(3, agrupado.size)
+        assertEquals(2, agrupado.size)
         assertEquals("Compra, Éxito", agrupado[0].descripcion)
         assertEquals(listOf(null, null), agrupado[0].partes.map { it.cargoPagador }) // 50/50: el peso impar lo asume quien pagó
         assertEquals(60_000L, agrupado[1].partes.single().cargoPagador)            // reparto ajustado: se conserva
-        assertEquals(true, agrupado[2].transferencia)
         assertEquals("compartida", FormatoEntreDos.categorias(LectorCsv.leer(archivos.getValue("categorias.csv"))).filas[0].responsable)
         assertEquals(1, FormatoEntreDos.deudas(LectorCsv.leer(archivos.getValue("deudas_abiertas.csv")), bogota).filas.size)
         assertEquals(false, archivos.containsKey("metas.csv"))

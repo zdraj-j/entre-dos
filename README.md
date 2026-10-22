@@ -57,7 +57,7 @@ Regla de oro: toda escritura pasa por `Escritor`, que sella el cambio con el rel
 
 1. Abre la carpeta en Android Studio y deja que sincronice Gradle.
 2. Configura la cuenta de Google del hogar y Google Cloud: [`docs/CONFIGURACION.md`](docs/CONFIGURACION.md).
-3. `./gradlew test` (96 pruebas de la lógica pura).
+3. `./gradlew test` (97 pruebas de la lógica pura).
 4. Instala en los dos teléfonos y recorre [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
 
 ## Documentos
@@ -73,7 +73,7 @@ Regla de oro: toda escritura pasa por `Escritor`, que sella el cambio con el rel
 
 ## Estado
 
-Las 7 entregas del plan y el rediseño están en el código (versión 1.0.0). **Probado:** 96 pruebas de la lógica
+Las 7 entregas del plan y el rediseño están en el código (versión 1.0.0). **Probado:** 97 pruebas de la lógica
 pura. **Sin probar todavía en un dispositivo:** todo lo de Android (compilación, pantallas, Drive, avisos, wifi).
 Los nombres de paquete y los textos de los bancos (`core/LectoresBancos.kt`) deben confirmarse con
 Hogar › Ajustes › Diagnóstico en los teléfonos reales.

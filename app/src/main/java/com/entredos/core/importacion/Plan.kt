@@ -18,7 +18,6 @@ data class GastoImportado(
     val pagadoPor: String,
     val descripcion: String?,
     val comercio: String?,
-    val transferencia: Boolean,
     val partes: List<ParteImportada>,
 ) {
     val monto: Long get() = partes.sumOf { it.monto }
@@ -44,7 +43,6 @@ data class GastoListo(
     val pagadoPor: Miembro,
     val nombre: String,
     val comercio: String?,
-    val transferencia: Boolean,
     /** [ParteLista.categoria] es la clave normalizada de [EntradaPlan.categorias]. */
     val partes: List<ParteLista>,
 ) {
@@ -93,17 +91,17 @@ object PlanImportador {
             val p = grupo.first()
             val consistente = grupo.all {
                 it.fecha == p.fecha && it.pagadoPor == p.pagadoPor && it.descripcion == p.descripcion &&
-                    it.comercio == p.comercio && it.transferencia == p.transferencia
+                    it.comercio == p.comercio
             }
             if (!consistente) {
-                errores += ErrorFila("gastos.csv", p.linea, "Las filas del gasto $id no coinciden en fecha, quién pagó, descripción, comercio o tipo (líneas ${grupo.joinToString { it.linea.toString() }})")
+                errores += ErrorFila("gastos.csv", p.linea, "Las filas del gasto $id no coinciden en fecha, quién pagó, descripción o comercio (líneas ${grupo.joinToString { it.linea.toString() }})")
                 continue
             }
-            gastos += GastoImportado(id, grupo.map { it.linea }, p.fecha, p.pagadoPor, p.descripcion, p.comercio, p.transferencia,
+            gastos += GastoImportado(id, grupo.map { it.linea }, p.fecha, p.pagadoPor, p.descripcion, p.comercio,
                 grupo.map { ParteImportada(it.categoria, it.monto, it.cargoPagador) })
         }
         sinId.forEach { f ->
-            gastos += GastoImportado(null, listOf(f.linea), f.fecha, f.pagadoPor, f.descripcion, f.comercio, f.transferencia,
+            gastos += GastoImportado(null, listOf(f.linea), f.fecha, f.pagadoPor, f.descripcion, f.comercio,
                 listOf(ParteImportada(f.categoria, f.monto, f.cargoPagador)))
         }
         return Leido(gastos.sortedBy { it.lineas.first() }, errores)
@@ -136,7 +134,7 @@ object PlanImportador {
             listos += GastoListo(
                 idOrigen = g.idOrigen, fecha = g.fecha, pagadoPor = quien,
                 nombre = g.descripcion ?: g.comercio ?: g.partes.joinToString(", ") { it.categoria },
-                comercio = g.comercio, transferencia = g.transferencia,
+                comercio = g.comercio,
                 partes = g.partes.map { ParteLista(clave(it.categoria), it.monto, it.cargoPagador) },
             )
         }
@@ -186,7 +184,7 @@ object PlanImportador {
         existentes: List<Pair<Long, Long>>,
         zona: ZoneId,
     ): List<PeriodoHistorico> {
-        val anteriores = gastos.filter { !it.transferencia && it.fecha < inicioPeriodoActual }
+        val anteriores = gastos.filter { it.fecha < inicioPeriodoActual }
         return anteriores.groupBy { g ->
             Periodo.ultimoDiaDeInicio(diaInicio, Instant.ofEpochMilli(g.fecha).atZone(zona).toLocalDate())
         }.map { (desde, lista) ->
@@ -212,7 +210,7 @@ object PlanImportador {
      */
     fun reglas(gastos: List<GastoListo>): Map<String, String> =
         gastos.asSequence()
-            .filter { !it.transferencia && it.partes.size == 1 && !it.comercio.isNullOrBlank() }
+            .filter { it.partes.size == 1 && !it.comercio.isNullOrBlank() }
             .map { Clasificacion.palabraDeComercio(it.comercio!!) to it.partes.single().categoria }
             .filter { it.first.isNotBlank() }
             .groupingBy { it }.eachCount()

@@ -7,7 +7,6 @@ import com.entredos.core.GastoResumen
 import com.entredos.core.Miembro
 import com.entredos.core.ModoPeriodo
 import com.entredos.core.Periodo
-import com.entredos.core.TipoGasto
 import com.entredos.data.local.DispositivoActual
 import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.local.Escritor
@@ -66,7 +65,7 @@ class CierreRepositorio @Inject constructor(
         val yo = dispositivo.miembro() ?: Miembro.A
         val categorias = db.categoriaDao().todosConEliminados().associateBy { it.id }
         val nombres = db.miembroDao().todos().associate { it.id to it.nombre }
-        val gastos = db.gastoDao().confirmadosEntre(inicio, fin).filter { it.gasto.tipo == TipoGasto.GASTO }
+        val gastos = db.gastoDao().confirmadosEntre(inicio, fin)
         val r = Estadisticas.calcular(gastos.map(::aResumen))
         val activas = categorias.values.filter { !it.sync.eliminado }
         val gastadoPor = r.porCategoria.toMap()

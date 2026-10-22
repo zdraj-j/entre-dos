@@ -58,13 +58,13 @@ class ImportacionTest {
         assertTrue(FormatoEntreDos.esFormatoPropio(tabla))
         val leido = FormatoEntreDos.gastos(tabla, bogota)
         assertEquals(emptyList<ErrorFila>(), leido.errores)
-        assertEquals(6, leido.filas.size)
+        assertEquals(5, leido.filas.size)
+        assertEquals(1, leido.omitidas) // la transferencia de un respaldo viejo no entra
         assertEquals("Pizza, viernes", leido.filas[1].descripcion)
         assertEquals(60_000L, leido.filas[4].cargoPagador)
-        assertTrue(leido.filas[5].transferencia)
 
         val agrupado = PlanImportador.agrupar(leido.filas)
-        assertEquals(5, agrupado.filas.size)
+        assertEquals(4, agrupado.filas.size)
         val dividido = agrupado.filas.first { it.idOrigen == "g-1003" }
         assertEquals(85_000L, dividido.monto)
         assertEquals(listOf("Mercado", "Aseo"), dividido.partes.map { it.categoria })
@@ -85,7 +85,7 @@ class ImportacionTest {
     }
 
     @Test fun filasDivididasQueNoCoinciden() {
-        val f1 = FilaGasto(2, "x", dia(9, 1), 1000, "A", "Ana", null, null, false, null)
+        val f1 = FilaGasto(2, "x", dia(9, 1), 1000, "A", "Ana", null, null, null)
         val f2 = f1.copy(linea = 3, fecha = dia(9, 2), categoria = "B")
         val r = PlanImportador.agrupar(listOf(f1, f2))
         assertTrue(r.filas.isEmpty())
@@ -117,28 +117,28 @@ class ImportacionTest {
 
     @Test fun planCompleto() {
         val p = plan()
-        assertEquals(5, p.gastos.size)
+        assertEquals(4, p.gastos.size)
         assertEquals(0, p.duplicados)
-        assertEquals(setOf("restaurantes", "aseo", "ahorro"), p.categoriasNuevas.keys)
+        assertEquals(setOf("restaurantes", "aseo"), p.categoriasNuevas.keys) // "ahorro" solo lo usaba la transferencia
         assertEquals("Mercado de la semana", p.gastos[0].nombre)
         assertEquals(Miembro.B, p.gastos[0].pagadoPor)
-        assertEquals("Paso a la cuenta de ahorros", p.gastos[4].nombre)
+        assertEquals("Internet", p.gastos[3].nombre)
     }
 
     @Test fun reimportarNoDuplica() {
-        val p = plan(ids = setOf("g-1001", "g-1002", "g-1003", "g-1004", "g-1005"))
+        val p = plan(ids = setOf("g-1001", "g-1002", "g-1003", "g-1004"))
         assertEquals(0, p.gastos.size)
-        assertEquals(5, p.duplicados)
+        assertEquals(4, p.duplicados)
     }
 
     @Test fun personaOCategoriaSinAsignarEsError() {
-        val gasto = GastoImportado(null, listOf(2), dia(9, 1), "Desconocido", null, null, false, listOf(ParteImportada("Mercado", 1000, null)))
+        val gasto = GastoImportado(null, listOf(2), dia(9, 1), "Desconocido", null, null, listOf(ParteImportada("Mercado", 1000, null)))
         val p = PlanImportador.armar(EntradaPlan(listOf(gasto), personas = emptyMap(), categorias = emptyMap(), zona = bogota))
         assertEquals("No se asignó a ningún titular: Desconocido", p.errores.single().motivo)
     }
 
     @Test fun posiblesDuplicadosSinIdOrigen() {
-        val g = GastoImportado(null, listOf(2), dia(9, 1), "Ana", null, "D1", false, listOf(ParteImportada("Mercado", 35_000, null)))
+        val g = GastoImportado(null, listOf(2), dia(9, 1), "Ana", null, "D1", listOf(ParteImportada("Mercado", 35_000, null)))
         val entrada = EntradaPlan(
             listOf(g, g.copy(lineas = listOf(3))), personas = mapOf("ana" to Miembro.A),
             categorias = mapOf("mercado" to DestinoCategoria.Existente("m")), zona = bogota,
@@ -163,7 +163,7 @@ class ImportacionTest {
     }
 
     @Test fun periodosAnteriores() {
-        val g = { m: Int, d: Int, monto: Long, comercio: String? -> GastoListo(null, dia(m, d), Miembro.A, "x", comercio, false, listOf(ParteLista("mercado", monto, null))) }
+        val g = { m: Int, d: Int, monto: Long, comercio: String? -> GastoListo(null, dia(m, d), Miembro.A, "x", comercio, listOf(ParteLista("mercado", monto, null))) }
         val gastos = listOf(g(7, 3, 10_000, "D1"), g(7, 28, 5_000, "D1"), g(8, 15, 20_000, "Ara"), g(9, 2, 1_000, null), g(10, 2, 7_000, null))
         val inicioActual = LocalDate.of(2026, 10, 1).atStartOfDay(bogota).toInstant().toEpochMilli()
         val existente = LocalDate.of(2026, 9, 1).atStartOfDay(bogota).toInstant().toEpochMilli() to inicioActual
@@ -174,7 +174,7 @@ class ImportacionTest {
     }
 
     @Test fun reglasDesdeLaImportacion() {
-        val g = { c: String, cat: String -> GastoListo(null, dia(9, 1), Miembro.A, "x", c, false, listOf(ParteLista(cat, 1000, null))) }
+        val g = { c: String, cat: String -> GastoListo(null, dia(9, 1), Miembro.A, "x", c, listOf(ParteLista(cat, 1000, null))) }
         val gastos = List(3) { g("D1 SUCURSAL $it", "mercado") } + List(2) { g("Rappi", "antojos") } + g("D1 CENTRO 4", "aseo")
         assertEquals(mapOf("d1" to "mercado"), PlanImportador.reglas(gastos))
     }
@@ -192,10 +192,8 @@ class ImportacionTest {
         assertEquals("dd/MM/yyyy", formato)
         assertEquals(SignoGastos.NEGATIVOS, FormatoGenerico.detectarSigno(t, mapeo.monto))
         val leido = FormatoGenerico.gastos(t, mapeo, formato!!, SignoGastos.NEGATIVOS, bogota)
-        assertEquals(listOf(45_900L, 12_000L, 500_000L), leido.filas.map { it.monto })
-        assertEquals(1, leido.omitidas)
-        assertTrue(leido.filas[2].transferencia)
-        assertEquals(FormatoGenerico.SIN_CATEGORIA, leido.filas[2].categoria)
+        assertEquals(listOf(45_900L, 12_000L), leido.filas.map { it.monto })
+        assertEquals(2, leido.omitidas) // el ingreso y la transferencia
         assertEquals(FormatoGenerico.SIN_PERSONA, leido.filas[0].pagadoPor)
     }
 

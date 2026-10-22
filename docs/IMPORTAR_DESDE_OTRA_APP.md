@@ -8,12 +8,12 @@ con Claude Code.
 
 | Archivo | Una fila por | Columnas |
 | --- | --- | --- |
-| `gastos.csv` (obligatorio) | Gasto, o parte de un gasto dividido | `id_origen`, `fecha`, `monto`, `categoria`, `pagado_por`, `descripcion`, `comercio`, `tipo`, `cargo_pagador` |
+| `gastos.csv` (obligatorio) | Gasto, o parte de un gasto dividido | `id_origen`, `fecha`, `monto`, `categoria`, `pagado_por`, `descripcion`, `comercio`, `cargo_pagador` |
 | `categorias.csv` | Categoría | `nombre`, `responsable`, `presupuesto`, `color`, `destacada` |
 | `deudas_abiertas.csv` | Deuda con saldo pendiente | `id_origen`, `fecha`, `deudor`, `acreedor`, `monto`, `concepto` |
 | `manifest.json` | — | `formato`, `version`, `app_origen`, `exportado` |
 
-Entre dos no maneja ahorros: si la otra app tiene metas de ahorro, no se exportan.
+Entre dos solo lleva gastos: no se exportan metas de ahorro ni transferencias.
 
 ## Reglas
 
@@ -21,9 +21,10 @@ Entre dos no maneja ahorros: si la otra app tiene metas de ahorro, no se exporta
 - Montos enteros en pesos, sin símbolo ni puntos (`35000`), siempre mayores que cero.
 - Fechas `AAAA-MM-DD` o `AAAA-MM-DDTHH:MM` en hora de Colombia. Booleanos `si` o `no`.
 - Personas: el nombre tal como aparece en la otra app; Entre dos pregunta a qué titular corresponde.
-- Un gasto dividido: varias filas con el mismo `id_origen` y los mismos fecha, pagado_por, descripción, comercio y tipo.
+- Un gasto dividido: varias filas con el mismo `id_origen` y los mismos fecha, pagado_por, descripción y comercio.
 - `cargo_pagador`: solo si el reparto fue distinto al normal (personal: todo su dueño; compartida: 50/50).
-- No se exportan ingresos, devoluciones, gastos descartados ni deudas ya saldadas.
+- No se exportan ingresos, transferencias, devoluciones, gastos descartados ni deudas ya saldadas.
+- Respaldos viejos con la columna `tipo`: las filas `transferencia` se omiten al importar.
 
 ## Qué hace Entre dos al importar
 
@@ -46,7 +47,7 @@ Entre dos no maneja ahorros: si la otra app tiene metas de ahorro, no se exporta
 Necesito agregar a esta app una función "Exportar para Entre dos". Entre dos es otra app de presupuesto en pareja que importa un archivo con un formato fijo (versión 1). Tu trabajo es generar ese archivo a partir de los datos de esta app.
 
 ## Cómo quiero que trabajes
-1. Primero explora el proyecto: dónde y cómo se guardan los gastos, las categorías, las deudas entre personas, las personas, los gastos divididos en varias categorías y las transferencias.
+1. Primero explora el proyecto: dónde y cómo se guardan los gastos, las categorías, las deudas entre personas, las personas, los gastos divididos en varias categorías, y cómo se distinguen las transferencias (para no exportarlas).
 2. Antes de escribir código, muéstrame una tabla con cómo vas a traducir cada dato de esta app a cada columna del formato, y lista lo que no tenga equivalente o sea ambiguo. Espera a que te confirme.
 3. Implementa siguiendo el estilo y la arquitectura que ya usa el proyecto. No agregues librerías para CSV ni para ZIP.
 4. Agrega pruebas automáticas y una entrada visible en la app (por ejemplo en Ajustes) que diga "Exportar para Entre dos".
@@ -64,19 +65,18 @@ Un archivo `entredos-export-AAAAMMDD.zip` con estos archivos en la raíz (sin ca
 - Booleanos: si o no.
 - Personas: el nombre tal como aparece en esta app.
 - Textos de máximo 120 caracteres.
-- No exportes ingresos, recargas, devoluciones, gastos descartados o rechazados, ni gastos sin categoría.
+- No exportes ingresos, transferencias (entre cuentas, al ahorro o a otras personas), recargas, devoluciones, gastos descartados o rechazados, ni gastos sin categoría.
 
 ### manifest.json
 {"formato": "entredos-import", "version": 1, "app_origen": "<nombre de esta app>", "exportado": "<fecha y hora ISO 8601 con zona>"}
 
 ### gastos.csv (obligatorio)
-Columnas: id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,tipo,cargo_pagador
+Columnas: id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,cargo_pagador
 - id_origen: id interno del gasto en esta app. Obligatorio en la práctica: evita duplicados al reimportar.
 - fecha, monto, categoria (nombre), pagado_por (nombre de quien pagó): obligatorias.
 - descripcion, comercio: opcionales.
-- tipo: gasto (por defecto) o transferencia.
 - cargo_pagador: opcional. Solo si el gasto se repartió distinto a lo normal: cuánto de esa fila asumió quien pagó. Vacío = regla normal (categoría personal: todo su dueño; compartida: 50/50).
-- Un gasto dividido en varias categorías va en varias filas con el mismo id_origen, cada una con el monto de su parte. Todas esas filas deben tener igual fecha, pagado_por, descripcion, comercio y tipo, y la suma de sus montos debe ser el total del gasto.
+- Un gasto dividido en varias categorías va en varias filas con el mismo id_origen, cada una con el monto de su parte. Todas esas filas deben tener igual fecha, pagado_por, descripcion y comercio, y la suma de sus montos debe ser el total del gasto.
 
 ### categorias.csv (opcional)
 Columnas: nombre,responsable,presupuesto,color,destacada
@@ -91,13 +91,12 @@ Columnas: id_origen,fecha,deudor,acreedor,monto,concepto
 - Solo deudas con saldo pendiente. monto = lo que falta, ya descontados los abonos. deudor y acreedor son nombres y deben ser distintos.
 
 ### Ejemplo de gastos.csv
-id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,tipo,cargo_pagador
-g-1001,2026-09-02,35000,Mercado,Pareja,Mercado de la semana,D1,gasto,
-g-1002,2026-09-03T19:30,48000,Restaurantes,Zdraj,"Pizza, viernes",Domino's,gasto,
-g-1003,2026-09-05,60000,Mercado,Zdraj,Compra Éxito,Éxito,gasto,
-g-1003,2026-09-05,25000,Aseo,Zdraj,Compra Éxito,Éxito,gasto,
-g-1004,2026-09-10,100000,Servicios,Pareja,Internet,Claro,gasto,60000
-g-1005,2026-09-12,200000,Ahorro,Zdraj,Paso a la cuenta de ahorros,,transferencia,
+id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,cargo_pagador
+g-1001,2026-09-02,35000,Mercado,Pareja,Mercado de la semana,D1,
+g-1002,2026-09-03T19:30,48000,Restaurantes,Zdraj,"Pizza, viernes",Domino's,
+g-1003,2026-09-05,60000,Mercado,Zdraj,Compra Éxito,Éxito,
+g-1003,2026-09-05,25000,Aseo,Zdraj,Compra Éxito,Éxito,
+g-1004,2026-09-10,100000,Servicios,Pareja,Internet,Claro,60000
 
 ## Entrega del archivo
 Un botón "Exportar para Entre dos" que genere el zip y permita guardarlo donde la persona elija o compartirlo. Muestra al final cuántos gastos, categorías y deudas se exportaron.
@@ -106,6 +105,6 @@ Un botón "Exportar para Entre dos" que genere el zip y permita guardarlo donde 
 - El zip contiene los CSV en la raíz y el manifest.json, y no contiene metas ni ahorros.
 - Ningún monto es cero, negativo ni tiene separadores.
 - Los gastos divididos comparten id_origen y sus partes suman el total.
-- No aparecen ingresos ni gastos descartados.
-- Las pruebas cubren: escape de campos, gasto dividido, transferencia, deuda con abono parcial y exclusión de ingresos.
+- No aparecen ingresos, transferencias ni gastos descartados.
+- Las pruebas cubren: escape de campos, gasto dividido, deuda con abono parcial y exclusión de ingresos y transferencias.
 ```
