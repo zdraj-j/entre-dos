@@ -16,7 +16,7 @@
 | `hogar` | Nombre, día de inicio, modo del periodo (manual o automático) |
 | `miembro` | A o B y su nombre |
 | `categoria` | Nombre, color, responsable (A, B o COMPARTIDA), tope o sin tope, destacada, orden |
-| `gasto` | Monto, nombre, comercio, fecha, quién pagó, tipo (GASTO o TRANSFERENCIA), estado (PENDIENTE, CONFIRMADO, IGNORADO), origen, lote |
+| `gasto` | Monto, nombre, comercio, fecha, quién pagó, estado (PENDIENTE, CONFIRMADO, IGNORADO), origen, banco, lote |
 | `parte_gasto` | Categoría, monto y cargo de A y de B (suman el monto). Su id es el de su deuda |
 | `deuda_manual` · `abono` | Deudas agregadas a mano y abonos a cualquier deuda |
 | `periodo_cerrado` | Inicio, fin, totales y resumen (JSON) |

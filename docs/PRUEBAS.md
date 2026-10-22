@@ -1,6 +1,6 @@
 # Pruebas a mano con los dos teléfonos
 
-Antes: `./gradlew test` (88 pruebas de la lógica pura).
+Antes: `./gradlew test` (97 pruebas de la lógica pura).
 
 ## Primer uso y sincronización
 1. Teléfono 1: permisos, conectar la cuenta del hogar, Crear hogar; en Hogar › Categorías y topes crear una compartida con tope.
@@ -19,10 +19,12 @@ Antes: `./gradlew test` (88 pruebas de la lógica pura).
 
 ## Gastos detectados
 1. Hogar › Ajustes › Diagnóstico: hacer una compra y ver el aviso del banco y su resultado.
-2. El gasto aparece en Gastos › Por confirmar (con número en la pestaña). Tocar una sugerida lo confirma.
-3. "Otra": elegir dos categorías → se reparte en partes iguales. Probar "Es una transferencia" y "No es un gasto".
-4. Aviso del teléfono: un botón confirma sin abrir; tocar el cuerpo abre la hoja y no se cierra sin decidir.
-5. Confirmar 3 veces el mismo comercio en la misma categoría: queda en Ajustes › Reglas aprendidas y la próxima vez se guarda solo.
+2. El gasto aparece en Gastos › Por confirmar (recuadro naranja, con número en la pestaña), sin botones debajo. Muestra a quién le llegó, la fecha y hora, y el banco. Tocarlo abre las categorías (las sugeridas primero); tocar una lo confirma.
+3. "Varias categorías o no es un gasto": elegir dos categorías → se reparte en partes iguales. Probar "No es un gasto": desaparece y no cuenta.
+4. Un SMS de publicidad (oferta, crédito preaprobado, "compra hoy y gana…", con enlace o con %) no crea gasto; en Diagnóstico sale "Ignorada" o "Banco: no es gasto".
+5. Después de actualizar, los gastos que ya estaban por confirmar siguen ahí (la base se migra, no se borra) y las transferencias viejas ya no aparecen ni suman.
+6. Aviso del teléfono: un botón confirma sin abrir; tocar el cuerpo abre la hoja y no se cierra sin decidir.
+7. Confirmar 3 veces el mismo comercio en la misma categoría: queda en Ajustes › Reglas aprendidas y la próxima vez se guarda solo.
 
 ## Mes y deudas
 1. Con más del 50 % gastado en los primeros días, aparece "A este ritmo se pasarán…".
@@ -32,9 +34,9 @@ Antes: `./gradlew test` (88 pruebas de la lógica pura).
 5. Ajustes › El mes › Automático con el día de hoy: al día siguiente el mes se archiva solo.
 
 ## Importar y exportar
-1. Importar `ejemplos/entredos-export-ejemplo.zip`: 7 gastos, 1 deuda, 3 meses anteriores (con día de inicio 1).
+1. Importar `ejemplos/entredos-export-ejemplo.zip`: 6 gastos, 1 deuda, 3 meses anteriores (con día de inicio 1).
 2. Importarlo otra vez: todo sale como ya importado.
-3. Importar `ejemplos/otra-app-ejemplo.csv`: entran 3 y se omite el salario.
+3. Importar `ejemplos/otra-app-ejemplo.csv`: entran 2 y se omiten el salario y la transferencia.
 4. Ajustes › Importar › Deshacer: desaparece en los dos teléfonos.
 5. Exportar respaldo e importarlo en un hogar de prueba: queda igual.
 

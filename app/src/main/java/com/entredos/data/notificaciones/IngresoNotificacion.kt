@@ -1,8 +1,10 @@
 package com.entredos.data.notificaciones
 
+import android.content.Context
 import com.entredos.core.CategoriaInfo
 import com.entredos.core.Clasificacion
 import com.entredos.core.LectorGenerico
+import com.entredos.core.LectoresBancos
 import com.entredos.core.OrigenGasto
 import com.entredos.core.RecurrenteInfo
 import com.entredos.core.ReglaInfo
@@ -13,6 +15,7 @@ import com.entredos.data.local.entity.CategoriaEntity
 import com.entredos.data.local.entity.GastoEntity
 import com.entredos.data.repository.GastosRepositorio
 import com.entredos.data.repository.ParteNueva
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,10 +41,11 @@ class IngresoNotificacion @Inject constructor(
 ) {
 
     /**
+     * @param banco desde dónde se pagó, para mostrarlo en la lista (en un SMS, el banco que nombra).
      * @param forzarPendiente true para el lector genérico: nunca se clasifica solo.
      * @return null si este teléfono aún no pertenece a un hogar.
      */
-    suspend fun registrar(monto: Long, comercio: String?, appBanco: String, fecha: Long, forzarPendiente: Boolean = false): ResultadoIngreso? {
+    suspend fun registrar(monto: Long, comercio: String?, appBanco: String, banco: String?, fecha: Long, forzarPendiente: Boolean = false): ResultadoIngreso? {
         val yo = dispositivo.miembro() ?: return null
         val ventana = 5 * 60_000L
         if (db.gastoDao().buscarDuplicado(monto, comercio, appBanco, fecha - ventana, fecha + ventana) != null) {
@@ -55,24 +59,24 @@ class IngresoNotificacion @Inject constructor(
                 comercio, monto, recurrentes.map { RecurrenteInfo(it.id, it.categoriaId, it.montoEsperado, it.palabraComercio) },
             )?.let { r ->
                 val recurrente = recurrentes.first { it.id == r.id }
-                return confirmar(recurrente.nombre, comercio, monto, fecha, appBanco, r.categoriaId, categorias)
+                return confirmar(recurrente.nombre, comercio, monto, fecha, appBanco, banco, r.categoriaId, categorias)
             }
             Clasificacion.reglaAutomatica(comercio, reglas())?.let { regla ->
-                return confirmar(comercio ?: "Gasto", comercio, monto, fecha, appBanco, regla.categoriaId, categorias)
+                return confirmar(comercio ?: "Gasto", comercio, monto, fecha, appBanco, banco, regla.categoriaId, categorias)
             }
         }
 
-        val gasto = gastos.registrarPendiente(monto, comercio ?: nombreApp(appBanco), comercio, fecha, yo, appBanco)
+        val gasto = gastos.registrarPendiente(monto, comercio ?: banco ?: nombreApp(appBanco), comercio, fecha, yo, appBanco, banco)
         val sugeridas = Clasificacion.sugerencias(comercio, reglas(), categorias.map { CategoriaInfo(it.id, it.nombre, it.destacada) })
         return ResultadoIngreso.Pendiente(gasto, sugeridas.mapNotNull { s -> categorias.firstOrNull { it.id == s.id } })
     }
 
     private suspend fun confirmar(
-        nombre: String, comercio: String?, monto: Long, fecha: Long, appBanco: String, categoriaId: String, categorias: List<CategoriaEntity>,
+        nombre: String, comercio: String?, monto: Long, fecha: Long, appBanco: String, banco: String?, categoriaId: String, categorias: List<CategoriaEntity>,
     ): ResultadoIngreso? {
         val categoria = categorias.firstOrNull { it.id == categoriaId } ?: return null
         val yo = dispositivo.miembro() ?: return null
-        val gasto = gastos.registrar(nombre, fecha, yo, listOf(ParteNueva(categoriaId, monto)), comercio, OrigenGasto.NOTIFICACION, appBanco)
+        val gasto = gastos.registrar(nombre, fecha, yo, listOf(ParteNueva(categoriaId, monto)), comercio, OrigenGasto.NOTIFICACION, appBanco, banco)
         return ResultadoIngreso.Confirmado(gasto, categoria)
     }
 
@@ -84,6 +88,7 @@ class IngresoNotificacion @Inject constructor(
 /** Lector genérico: solo para las apps elegidas en Detección; lo que lee siempre queda pendiente. */
 @Singleton
 class ReceptorGenerico @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val ajustes: AjustesLocales,
     private val ingreso: IngresoNotificacion,
 ) {
@@ -92,6 +97,13 @@ class ReceptorGenerico @Inject constructor(
         val a = ajustes.actual
         if (!a.lectorGenericoActivo || paquete !in a.appsGenericas) return null
         val lectura = LectorGenerico.leer(titulo, texto) ?: return null
-        return ingreso.registrar(lectura.monto, lectura.comercio, paquete, cuando, forzarPendiente = true)
+        val banco = LectoresBancos.bancoMencionado(listOfNotNull(titulo, texto).joinToString(". ")) ?: nombreApp(paquete)
+        return ingreso.registrar(lectura.monto, lectura.comercio, paquete, banco, cuando, forzarPendiente = true)
     }
+
+    /** Si el texto no nombra un banco, el nombre de la app que avisó ("Mensajes" en un SMS). */
+    private fun nombreApp(paquete: String): String? = runCatching {
+        val pm = context.packageManager
+        pm.getApplicationLabel(pm.getApplicationInfo(paquete, 0)).toString()
+    }.getOrNull()
 }

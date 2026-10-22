@@ -54,7 +54,6 @@ fun HojaCategoria(
     categorias: List<CategoriaEntity>,
     obligatoria: Boolean,
     alGuardar: (List<String>) -> Unit,
-    alTransferencia: () -> Unit,
     alNoEsGasto: () -> Unit,
     alCerrar: () -> Unit,
 ) {
@@ -100,9 +99,8 @@ fun HojaCategoria(
             Button(onClick = { alGuardar(elegidas.toList()) }, enabled = elegidas.isNotEmpty() && gasto.monto >= elegidas.size, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Text(if (elegidas.size > 1) "Guardar en ${elegidas.size} categorías" else "Guardar")
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = alTransferencia) { Text("Es una transferencia", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                TextButton(onClick = alNoEsGasto) { Text("No es un gasto", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            TextButton(onClick = alNoEsGasto, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Text("No es un gasto", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(8.dp))
         }

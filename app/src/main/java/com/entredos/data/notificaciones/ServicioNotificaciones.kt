@@ -38,7 +38,7 @@ class ServicioNotificaciones : NotificationListenerService() {
 
         alcance.launch {
             val (resultado, nota) = when (val r = LectoresBancos.leer(paquete, titulo, texto)) {
-                is ResultadoLector.Gasto -> ingreso.registrar(r.lectura.monto, r.lectura.comercio, paquete, sbn.postTime) to "Gasto ${r.banco.nombre}: ${r.lectura.monto}"
+                is ResultadoLector.Gasto -> ingreso.registrar(r.lectura.monto, r.lectura.comercio, paquete, r.banco.nombre, sbn.postTime) to "Gasto ${r.banco.nombre}: ${r.lectura.monto}"
                 ResultadoLector.Descartada -> null to "Banco: no es gasto"
                 ResultadoLector.NoEsBanco -> receptorGenerico.alRecibir(paquete, titulo, texto, sbn.postTime).let { it to if (it != null) "Lector genérico" else "Ignorada" }
             }

@@ -15,7 +15,6 @@ data class GastoExport(
     val pagadoPor: Miembro,
     val nombre: String,
     val comercio: String?,
-    val transferencia: Boolean,
     val partes: List<ParteExport>,
 )
 
@@ -40,13 +39,13 @@ object ExportadorEntreDos {
         fun fecha(ms: Long) = Instant.ofEpochMilli(ms).atZone(zona).format(fmt)
         fun nombre(m: Miembro) = nombres[m] ?: "Titular ${m.name}"
 
-        val g = StringBuilder("id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,tipo,cargo_pagador\n")
+        val g = StringBuilder("id_origen,fecha,monto,categoria,pagado_por,descripcion,comercio,cargo_pagador\n")
         for (gasto in gastos.sortedBy { it.fecha }) for (p in gasto.partes) {
             val real = if (gasto.pagadoPor == Miembro.A) p.cargoA else p.cargoB
             val porRegla = Reparto.repartir(p.monto, p.responsable, gasto.pagadoPor).de(gasto.pagadoPor)
             g.append(Csv.fila(
                 gasto.id, fecha(gasto.fecha), p.monto, p.categoria, nombre(gasto.pagadoPor), gasto.nombre, gasto.comercio,
-                if (gasto.transferencia) "transferencia" else "gasto", if (real != porRegla) real else null,
+                if (real != porRegla) real else null,
             )).append('\n')
         }
 

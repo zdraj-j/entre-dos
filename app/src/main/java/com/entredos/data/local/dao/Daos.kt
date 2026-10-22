@@ -137,23 +137,23 @@ interface ParteGastoDao {
     @Query("SELECT * FROM parte_gasto WHERE gastoId = :gastoId AND sync_eliminado = 0")
     suspend fun porGasto(gastoId: String): List<ParteGastoEntity>
 
-    /** Partes que pueden generar deuda: gastos confirmados de tipo GASTO, sin eliminar. */
+    /** Partes que pueden generar deuda: gastos confirmados, sin eliminar. */
     @Query(
         """SELECT p.id AS parteId, p.gastoId AS gastoId, g.nombre AS concepto, g.fecha AS fecha,
                   g.pagadoPor AS pagadoPor, p.cargoA AS cargoA, p.cargoB AS cargoB,
                   (g.origen = 'IMPORTACION') AS importado
            FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
            WHERE p.sync_eliminado = 0 AND g.sync_eliminado = 0
-             AND g.estado = 'CONFIRMADO' AND g.tipo = 'GASTO'"""
+             AND g.estado = 'CONFIRMADO'"""
     )
     fun observarParaDeudas(): Flow<List<ParteParaDeuda>>
 
-    /** Lo gastado por categoría desde [desde]: gastos confirmados de tipo GASTO. */
+    /** Lo gastado por categoría desde [desde]: gastos confirmados. */
     @Query(
         """SELECT p.categoriaId AS categoriaId, p.monto AS monto
            FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
            WHERE p.sync_eliminado = 0 AND g.sync_eliminado = 0
-             AND g.estado = 'CONFIRMADO' AND g.tipo = 'GASTO' AND g.fecha >= :desde"""
+             AND g.estado = 'CONFIRMADO' AND g.fecha >= :desde"""
     )
     fun observarPartesDesde(desde: Long): Flow<List<ParteEnPeriodo>>
 

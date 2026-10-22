@@ -119,7 +119,7 @@ private fun PasoColumnas(p: PasoImportar.Columnas, confirmar: (PasoImportar.Colu
     Selector("Quién pagó", opcionales, mapeo.pagadoPor) { mapeo = mapeo.copy(pagadoPor = it) }
     Selector("Descripción", opcionales, mapeo.descripcion) { mapeo = mapeo.copy(descripcion = it) }
     Selector("Comercio", opcionales, mapeo.comercio) { mapeo = mapeo.copy(comercio = it) }
-    Selector("Tipo (gasto, ingreso, transferencia)", opcionales, mapeo.tipo) { mapeo = mapeo.copy(tipo = it) }
+    Selector("Tipo (para omitir ingresos y transferencias)", opcionales, mapeo.tipo) { mapeo = mapeo.copy(tipo = it) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Los gastos vienen en negativo", Modifier.weight(1f))
         Switch(signo == SignoGastos.NEGATIVOS, { signo = if (it) SignoGastos.NEGATIVOS else SignoGastos.POSITIVOS })
@@ -188,10 +188,10 @@ private fun PasoRevisar(p: PasoImportar.Revisar, vm: ImportarViewModel) {
     }
     val plan = p.plan
     Text("Paso 4 de 4 · Vista previa", style = MaterialTheme.typography.titleMedium)
-    Text("Gastos que entran: ${plan.gastos.size} (${FormatoPesos.pesos(plan.gastos.filter { !it.transferencia }.sumOf { it.monto })})", fontWeight = FontWeight.SemiBold)
+    Text("Gastos que entran: ${plan.gastos.size} (${FormatoPesos.pesos(plan.gastos.sumOf { it.monto })})", fontWeight = FontWeight.SemiBold)
     Text("Ya importados antes (se omiten): ${plan.duplicados}")
     Text("Posibles duplicados sin id: ${plan.posiblesDuplicados}")
-    if (p.omitidas > 0) Text("Ingresos o filas en cero omitidos: ${p.omitidas}")
+    if (p.omitidas > 0) Text("Ingresos, transferencias o filas en cero omitidos: ${p.omitidas}")
     Text("Categorías nuevas: ${plan.categoriasNuevas.size} · Deudas abiertas: ${plan.deudas.size}")
     Text("Periodos anteriores que se crearían: ${p.periodosPrevistos}")
     Text("Los gastos importados no generan deudas: lo pendiente entra solo por las deudas abiertas.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

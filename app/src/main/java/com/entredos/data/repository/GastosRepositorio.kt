@@ -7,7 +7,6 @@ import com.entredos.core.Miembro
 import com.entredos.core.OrigenGasto
 import com.entredos.core.Reparto
 import com.entredos.core.ReglaInfo
-import com.entredos.core.TipoGasto
 import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.local.Escritor
 import com.entredos.data.local.Tablas
@@ -38,6 +37,7 @@ class GastosRepositorio @Inject constructor(
         comercio: String? = null,
         origen: OrigenGasto = OrigenGasto.MANUAL,
         appBanco: String? = null,
+        banco: String? = null,
     ): GastoEntity {
         val total = partes.sumOf { it.monto }
         Reparto.validarDivision(total, partes.map { it.monto })?.let { throw IllegalArgumentException(it) }
@@ -46,7 +46,7 @@ class GastosRepositorio @Inject constructor(
                 Tablas.GASTO,
                 GastoEntity(
                     monto = total, nombre = nombre, comercio = comercio, fecha = fecha, pagadoPor = pagadoPor,
-                    tipo = TipoGasto.GASTO, estado = EstadoGasto.CONFIRMADO, origen = origen, appBanco = appBanco,
+                    estado = EstadoGasto.CONFIRMADO, origen = origen, appBanco = appBanco, banco = banco,
                 ),
             )
             guardarPartes(gasto, partes)
@@ -55,37 +55,30 @@ class GastosRepositorio @Inject constructor(
         }
     }
 
-    /** Gasto detectado en una notificación que espera clasificación. Aún no tiene partes. */
-    suspend fun registrarPendiente(monto: Long, nombre: String, comercio: String?, fecha: Long, pagadoPor: Miembro, appBanco: String): GastoEntity {
+    /**
+     * Gasto detectado en una notificación que espera clasificación. Aún no tiene partes.
+     * [pagadoPor] es quien recibió el aviso; [banco], desde dónde se pagó.
+     */
+    suspend fun registrarPendiente(monto: Long, nombre: String, comercio: String?, fecha: Long, pagadoPor: Miembro, appBanco: String, banco: String?): GastoEntity {
         require(monto > 0) { "El monto debe ser mayor que cero" }
         return escritor.guardar(
             Tablas.GASTO,
             GastoEntity(
                 monto = monto, nombre = nombre, comercio = comercio, fecha = fecha, pagadoPor = pagadoPor,
-                estado = EstadoGasto.PENDIENTE, origen = OrigenGasto.NOTIFICACION, appBanco = appBanco,
+                estado = EstadoGasto.PENDIENTE, origen = OrigenGasto.NOTIFICACION, appBanco = appBanco, banco = banco,
             ),
         )
     }
 
-    /**
-     * Clasifica un pendiente: con categorías queda confirmado como gasto; con [transferencia]
-     * queda confirmado sin partes y no cuenta en el presupuesto.
-     */
-    suspend fun confirmarPendiente(gasto: GastoEntity, nombre: String, partes: List<ParteNueva>, transferencia: Boolean = false): GastoEntity =
+    /** Clasifica un pendiente: con sus categorías queda confirmado. */
+    suspend fun confirmarPendiente(gasto: GastoEntity, nombre: String, partes: List<ParteNueva>): GastoEntity =
         db.withTransaction {
-            if (transferencia) {
-                escritor.guardar(Tablas.GASTO, gasto.copy(nombre = nombre, tipo = TipoGasto.TRANSFERENCIA, estado = EstadoGasto.CONFIRMADO))
-            } else {
-                val total = partes.sumOf { it.monto }
-                Reparto.validarDivision(total, partes.map { it.monto })?.let { throw IllegalArgumentException(it) }
-                val confirmado = escritor.guardar(
-                    Tablas.GASTO,
-                    gasto.copy(nombre = nombre, monto = total, tipo = TipoGasto.GASTO, estado = EstadoGasto.CONFIRMADO),
-                )
-                guardarPartes(confirmado, partes)
-                aprenderSiCorresponde(confirmado, partes)
-                confirmado
-            }
+            val total = partes.sumOf { it.monto }
+            Reparto.validarDivision(total, partes.map { it.monto })?.let { throw IllegalArgumentException(it) }
+            val confirmado = escritor.guardar(Tablas.GASTO, gasto.copy(nombre = nombre, monto = total, estado = EstadoGasto.CONFIRMADO))
+            guardarPartes(confirmado, partes)
+            aprenderSiCorresponde(confirmado, partes)
+            confirmado
         }
 
     /** "No registrar": queda ignorado (no se borra, para que no vuelva a entrar como duplicado). */

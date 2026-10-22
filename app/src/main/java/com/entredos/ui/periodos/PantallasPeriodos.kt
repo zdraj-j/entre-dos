@@ -36,7 +36,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.entredos.core.FormatoPesos
-import com.entredos.core.TipoGasto
 import com.entredos.core.exportacion.ReportePeriodoCsv
 import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.local.Escritor
@@ -67,7 +66,7 @@ class PeriodosViewModel @Inject constructor(private val db: EntreDosDatabase) : 
         val p = db.periodoCerradoDao().porId(id) ?: return null
         val resumen = runCatching { Escritor.JSON.decodeFromString(ResumenPeriodo.serializer(), p.resumenJson) }
             .getOrDefault(ResumenPeriodo(emptyList(), emptyList(), emptyList()))
-        return Triple(p, resumen, db.gastoDao().confirmadosEntre(p.inicio, p.fin).filter { it.gasto.tipo == TipoGasto.GASTO })
+        return Triple(p, resumen, db.gastoDao().confirmadosEntre(p.inicio, p.fin))
     }
 
     suspend fun nombresCategorias(): Map<String, String> = db.categoriaDao().todosConEliminados().associate { it.id to it.nombre }

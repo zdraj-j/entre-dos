@@ -11,7 +11,6 @@ import com.entredos.core.Estadisticas
 import com.entredos.core.Miembro
 import com.entredos.core.Periodo
 import com.entredos.core.Presupuesto
-import com.entredos.core.TipoGasto
 import com.entredos.data.local.EntreDosDatabase
 import com.entredos.data.local.entity.CategoriaEntity
 import com.entredos.data.local.entity.MiembroEntity
@@ -67,7 +66,7 @@ class MesViewModel @Inject constructor(
                 val inicio = Instant.ofEpochMilli(inicioMs).atZone(zona).toLocalDate()
                 val fin = Periodo.finDelPeriodo(dia, Periodo.ultimoDiaDeInicio(dia, inicio))
                 val p = Presupuesto.calcular(cats.map { CategoriaConTope(it.id, it.presupuesto) }, partes)
-                val stats = Estadisticas.calcular(gastos.filter { it.gasto.tipo == TipoGasto.GASTO }.map(CierreRepositorio::aResumen))
+                val stats = Estadisticas.calcular(gastos.map(CierreRepositorio::aResumen))
                 EstadoMes(
                     inicio = inicio, fin = fin, diaInicio = dia, presupuesto = p, categorias = cats,
                     seVanAPasar = Periodo.seVanAPasar(p.gastado, p.asignado, inicio, fin, LocalDate.now(zona)),

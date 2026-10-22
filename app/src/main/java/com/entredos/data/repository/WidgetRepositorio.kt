@@ -2,7 +2,6 @@ package com.entredos.data.repository
 
 import com.entredos.core.CategoriaConTope
 import com.entredos.core.Presupuesto
-import com.entredos.core.TipoGasto
 import com.entredos.data.local.EntreDosDatabase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +36,7 @@ class WidgetRepositorio @Inject constructor(private val db: EntreDosDatabase, pr
             db.hogarDao().observar(),
         ) { cats, partes, deHoy, pendientes, hogar ->
             val p = Presupuesto.calcular(cats.map { CategoriaConTope(it.id, it.presupuesto) }, partes)
-            DatosWidget(hogar != null, p.disponible, p.asignado, deHoy.filter { it.gasto.tipo == TipoGasto.GASTO }.sumOf { it.gasto.monto }, pendientes)
+            DatosWidget(hogar != null, p.disponible, p.asignado, deHoy.sumOf { it.gasto.monto }, pendientes)
         }
     }.distinctUntilChanged()
 

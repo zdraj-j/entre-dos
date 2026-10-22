@@ -15,7 +15,6 @@ data class FilaGasto(
     val pagadoPor: String,
     val descripcion: String?,
     val comercio: String?,
-    val transferencia: Boolean,
     val cargoPagador: Long?,
 )
 
@@ -49,6 +48,7 @@ object FormatoEntreDos {
         val c = Indices(tabla)
         val filas = mutableListOf<FilaGasto>()
         val errores = mutableListOf<ErrorFila>()
+        var omitidas = 0
         for (f in tabla.filas) {
             val error = { motivo: String -> errores += ErrorFila(archivo, f.linea, motivo) }
             val fecha = Valores.fechaIso(tabla.valor(f, c["fecha"]), zona) ?: run { error("Fecha inválida: ${tabla.valor(f, c["fecha"]) ?: "vacía"}"); null }
@@ -63,7 +63,9 @@ object FormatoEntreDos {
                 monto == null || monto <= 0 -> error("El monto debe ser un número mayor que cero: ${tabla.valor(f, c["monto"]) ?: "vacío"}")
                 categoria == null -> error("Falta la categoría")
                 pagadoPor == null -> error("Falta quién pagó")
-                tipo != "gasto" && tipo != "transferencia" -> error("Tipo desconocido: $tipo (debe ser gasto o transferencia)")
+                // Respaldos viejos: la app ya no registra transferencias, solo gastos.
+                tipo == "transferencia" -> omitidas++
+                tipo != "gasto" -> error("Tipo desconocido: $tipo (debe ser gasto)")
                 cargoTexto != null && (cargo == null || cargo < 0 || cargo > monto) -> error("cargo_pagador debe estar entre 0 y $monto")
                 else -> filas += FilaGasto(
                     linea = f.linea,
@@ -72,12 +74,11 @@ object FormatoEntreDos {
                     categoria = categoria.take(120), pagadoPor = pagadoPor.take(120),
                     descripcion = tabla.valor(f, c["descripcion"])?.take(120),
                     comercio = tabla.valor(f, c["comercio"])?.take(120),
-                    transferencia = tipo == "transferencia",
                     cargoPagador = cargo,
                 )
             }
         }
-        return Leido(filas, errores)
+        return Leido(filas, errores, omitidas)
     }
 
     fun categorias(tabla: TablaCsv): Leido<FilaCategoria> {
@@ -200,18 +201,17 @@ object FormatoGenerico {
                 fecha == null -> errores += ErrorFila(archivo, f.linea, "Fecha inválida: ${tabla.valor(f, mapeo.fecha) ?: "vacía"}")
                 bruto == null -> errores += ErrorFila(archivo, f.linea, "Monto inválido: ${tabla.valor(f, mapeo.monto) ?: "vacío"}")
                 bruto == 0L -> omitidas++
-                Regex("""ingreso|income|deposito|abono|reembolso|refund""").containsMatchIn(tipo) -> omitidas++
+                Regex("""ingreso|income|deposito|abono|reembolso|refund|transfer""").containsMatchIn(tipo) -> omitidas++
                 else -> {
                     val esGasto = if (signo == SignoGastos.NEGATIVOS) bruto < 0 else bruto > 0
-                    val transferencia = Regex("""transfer""").containsMatchIn(tipo)
-                    if (!esGasto && !transferencia) { omitidas++; continue }
+                    if (!esGasto) { omitidas++; continue }
                     filas += FilaGasto(
                         linea = f.linea, idOrigen = null, fecha = fecha, monto = kotlin.math.abs(bruto),
                         categoria = tabla.valor(f, mapeo.categoria)?.take(120) ?: SIN_CATEGORIA,
                         pagadoPor = tabla.valor(f, mapeo.pagadoPor)?.take(120) ?: SIN_PERSONA,
                         descripcion = tabla.valor(f, mapeo.descripcion)?.take(120),
                         comercio = tabla.valor(f, mapeo.comercio)?.take(120),
-                        transferencia = transferencia, cargoPagador = null,
+                        cargoPagador = null,
                     )
                 }
             }

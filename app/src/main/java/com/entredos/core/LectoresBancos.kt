@@ -42,6 +42,45 @@ object LectoresBancos {
     private val MENCIONA_TARJETA = Regex("""tarjeta|rappicard|rappi card|rappipay""", RegexOption.IGNORE_CASE)
     private val ESTADO_PEDIDO = Regex("""en camino|califica|tu pedido|repartidor|lleg[oó]|preparando|rappitendero|entregado""", RegexOption.IGNORE_CASE)
 
+    /** Nombres de bancos y billeteras que se reconocen en el texto de un SMS o de otra app. */
+    private val NOMBRES_BANCOS = listOf(
+        "Bancolombia" to "bancolombia",
+        "Banco de Bogotá" to MENCIONA_BOGOTA.pattern,
+        "Davivienda" to "davivienda",
+        "DaviPlata" to "daviplata",
+        "Nequi" to "nequi",
+        "Nu" to """nubank|\bnu (colombia|financiera)\b""",
+        "BBVA" to """\bbbva\b""",
+        "Banco de Occidente" to """banco de occidente|bco\.? de occidente|\boccidente:""",
+        "Banco Popular" to """banco popular|bco\.? popular""",
+        "AV Villas" to """\bav ?villas\b""",
+        "Scotiabank Colpatria" to "colpatria|scotiabank",
+        "Banco Caja Social" to "caja social",
+        "Itaú" to """\bita[uú]\b""",
+        "Banco Falabella" to "falabella",
+        "Banco Agrario" to "banco agrario",
+        "Bancoomeva" to "bancoomeva",
+        "GNB Sudameris" to "sudameris",
+        "Banco Pichincha" to "pichincha",
+        "Lulo Bank" to """lulo ?bank""",
+        "RappiCard" to "rappicard|rappi card|rappipay",
+        "Movii" to """\bmovii\b""",
+        "Banco Finandina" to "finandina",
+        "Serfinanza" to "serfinanza",
+    ).map { (nombre, patron) -> nombre to Regex(patron, RegexOption.IGNORE_CASE) }
+
+    /** El banco que nombra el texto (el primero que aparece), para SMS y otras apps. */
+    fun bancoMencionado(texto: String): String? =
+        NOMBRES_BANCOS.mapNotNull { (nombre, patron) -> patron.find(texto)?.let { it.range.first to nombre } }
+            .minByOrNull { it.first }?.second
+
+    /**
+     * De dónde salió un gasto detectado para mostrarlo en la lista: el banco guardado o, en gastos
+     * anteriores que no lo guardaban, el banco de la app que avisó ("SMS" si fue un mensaje).
+     */
+    fun origen(banco: String?, paquete: String?): String? = banco
+        ?: paquete?.let { p -> Banco.entries.firstOrNull { p in it.paquetes }?.nombre ?: if (p in APPS_SMS) "SMS" else null }
+
     fun bancoDe(paquete: String, texto: String): Banco? = when {
         paquete in APPS_SMS -> if (MENCIONA_BOGOTA.containsMatchIn(texto)) Banco.BANCO_DE_BOGOTA else null
         else -> Banco.entries.firstOrNull { paquete in it.paquetes }

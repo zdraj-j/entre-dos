@@ -7,7 +7,6 @@ import com.entredos.core.Miembro
 import com.entredos.core.OrigenGasto
 import com.entredos.core.Reparto
 import com.entredos.core.Responsable
-import com.entredos.core.TipoGasto
 import com.entredos.core.importacion.DestinoCategoria
 import com.entredos.core.importacion.HuellaGasto
 import com.entredos.core.importacion.PlanImportacion
@@ -114,7 +113,6 @@ class ImportadorRepositorio @Inject constructor(
                         Tablas.GASTO,
                         GastoEntity(
                             monto = g.monto, nombre = g.nombre, comercio = g.comercio, fecha = g.fecha, pagadoPor = g.pagadoPor,
-                            tipo = if (g.transferencia) TipoGasto.TRANSFERENCIA else TipoGasto.GASTO,
                             estado = EstadoGasto.CONFIRMADO, origen = OrigenGasto.IMPORTACION,
                             loteImportacion = lote.id, idOrigen = g.idOrigen,
                         ),

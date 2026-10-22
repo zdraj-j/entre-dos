@@ -2,7 +2,6 @@ package com.entredos.data.repository
 
 import com.entredos.core.Miembro
 import com.entredos.core.Responsable
-import com.entredos.core.TipoGasto
 import com.entredos.core.exportacion.CategoriaExport
 import com.entredos.core.exportacion.DeudaExport
 import com.entredos.core.exportacion.ExportadorEntreDos
@@ -33,7 +32,7 @@ class ExportacionRepositorio @Inject constructor(private val db: EntreDosDatabas
                 ParteExport(c?.nombre ?: "Sin categoría", c?.responsable ?: Responsable.COMPARTIDA, p.monto, p.cargoA, p.cargoB)
             }
             if (partes.isEmpty()) null
-            else GastoExport(g.gasto.id, g.gasto.fecha, g.gasto.pagadoPor, g.gasto.nombre, g.gasto.comercio, g.gasto.tipo == TipoGasto.TRANSFERENCIA, partes)
+            else GastoExport(g.gasto.id, g.gasto.fecha, g.gasto.pagadoPor, g.gasto.nombre, g.gasto.comercio, partes)
         }
         val archivos = ExportadorEntreDos.archivos(
             gastos = gastos,

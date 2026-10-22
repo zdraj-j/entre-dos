@@ -20,6 +20,7 @@ object BaseDatosModule {
     @Provides @Singleton
     fun baseDatos(@ApplicationContext context: Context): EntreDosDatabase =
         Room.databaseBuilder(context, EntreDosDatabase::class.java, EntreDosDatabase.NOMBRE)
+            .addMigrations(EntreDosDatabase.MIGRACION_3_4)
             // Solo mientras no haya usuarios reales. Antes de usarla en serio: migraciones.
             .fallbackToDestructiveMigration()
             .build()

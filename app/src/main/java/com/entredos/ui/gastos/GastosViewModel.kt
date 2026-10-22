@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.entredos.core.CategoriaInfo
 import com.entredos.core.Clasificacion
 import com.entredos.core.FiltroMovimientos
+import com.entredos.core.LectoresBancos
 import com.entredos.core.MovimientoResumen
 import com.entredos.core.Movimientos
 import com.entredos.core.ReglaInfo
@@ -33,8 +34,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
-/** Gasto detectado que espera categoría, con las dos más probables. */
-data class PorConfirmar(val gasto: GastoEntity, val sugeridas: List<CategoriaEntity>)
+/** Gasto detectado que espera categoría, con las dos más probables y el banco del que salió el pago. */
+data class PorConfirmar(val gasto: GastoEntity, val sugeridas: List<CategoriaEntity>, val banco: String?)
 
 data class EstadoGastos(
     val pendientes: List<PorConfirmar> = emptyList(),
@@ -69,7 +70,7 @@ class GastosViewModel @Inject constructor(
         val infoCats = cats.map { CategoriaInfo(it.id, it.nombre, it.destacada) }
         lista.map { g ->
             val ids = Clasificacion.sugerencias(g.gasto.comercio, infoReglas, infoCats, cuantas = 2).map { it.id }
-            PorConfirmar(g.gasto, ids.mapNotNull { id -> cats.firstOrNull { it.id == id } })
+            PorConfirmar(g.gasto, ids.mapNotNull { id -> cats.firstOrNull { it.id == id } }, LectoresBancos.origen(g.gasto.banco, g.gasto.appBanco))
         }
     }
 
@@ -104,7 +105,6 @@ class GastosViewModel @Inject constructor(
 
     /** Desde la hoja "Otra": una o varias categorías (partes iguales). */
     fun confirmarVarias(g: GastoEntity, ids: List<String>) = hacer(g) { gastos.confirmarPendiente(g, g.nombre, gastos.partesIguales(g.monto, ids)) }
-    fun transferencia(g: GastoEntity) = hacer(g) { gastos.confirmarPendiente(g, g.nombre, emptyList(), transferencia = true) }
     fun noEsGasto(g: GastoEntity) = hacer(g) { gastos.ignorar(g) }
 
     private fun hacer(g: GastoEntity, accion: suspend () -> Unit) {
