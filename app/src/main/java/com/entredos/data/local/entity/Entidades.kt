@@ -95,6 +95,8 @@ data class GastoEntity(
     val origen: OrigenGasto = OrigenGasto.MANUAL,
     /** Paquete de la app bancaria que lo detectó (solo origen NOTIFICACION). */
     val appBanco: String? = null,
+    /** Banco desde el que se pagó, para mostrarlo (en un SMS, el que nombra el mensaje). Solo origen NOTIFICACION. */
+    val banco: String? = null,
     val loteImportacion: String? = null,
     /** Id en la app de donde se importó, para no duplicar al reimportar. */
     val idOrigen: String? = null,

@@ -17,6 +17,28 @@ object LectorGenerico {
         RegexOption.IGNORE_CASE,
     )
 
+    /**
+     * Publicidad y recordatorios: invitaciones a comprar o pedir algo, porcentajes, enlaces,
+     * «desde $», «en tus compras», préstamos, sorteos, fechas de pago y cómo dejar de recibir mensajes.
+     */
+    private val PUBLICIDAD = Regex(
+        """\b(aprovecha|desc[uú]bre(lo|la)?|conoce|solic[ií]ta(lo|la)?|adqui[eé]re(lo|la)?|obt[eé]n|ll[eé]va(te|lo|la)|disfruta|""" +
+            """participa|inscr[ií]bete|reclama|redime|cotiza|simula|ahorra|p[ií]de(lo|la)?|haz clic|""" +
+            """compra\s+(tu|tus|ya|hoy|aqu[ií]|ahora)|paga\s+(tu|tus|con|en|ya|hoy)|(en|por|con)\s+(tus\s+)?compras|""" +
+            """(desde|hasta|por solo|solo|antes|ahora)\s*(\$|cop\b)|o m[aá]s|superiores|""" +
+            """sorteo|premios?|regalo|bonos?|gratis|beneficios?|exclusiv[oa]s?|te invita|invitamos|te ofrece|ofrecemos|""" +
+            """pre-?aprobad[oa]|libre inversi[oó]n|te prestamos|compra de cartera|tasa|cuotas? sin inter[eé]s|""" +
+            """recuerda|record(amos|atorio)|vence|vencimiento|fecha l[ií]mite|pago m[ií]nimo|est[aá] disponible|ya puedes|""" +
+            """no recibir|desuscr|stop|salir al)\b|%|https?://|www\.|bit\.ly|\b[\w-]+\.(com|co|ly|me|link)/""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Algo tiene que decir que salió plata: compra, pago, retiro, transacción, débito, cobro… */
+    private val MOVIMIENTO = Regex(
+        """\b(compr|pag[oóa]|retir|avance|transacci|transfer|debit|d[eé]bito autom|cargo|cobr|consumo|realiz|usaste|usad[ao]|uso de)""",
+        RegexOption.IGNORE_CASE,
+    )
+
     /** $ 35.000 · COP 1.234.567,89 · $12,500.00 · $35000 */
     private val MONTO = Regex("""(?:\$|\bCOP)\s?(\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,](\d{1,2}))?(?!\d)""", RegexOption.IGNORE_CASE)
 
@@ -37,7 +59,8 @@ object LectorGenerico {
     /** [montoSinSigno]: el banco escribe el monto sin «$» (solo para lectores de bancos que lo hacen). */
     fun leer(titulo: String?, texto: String?, montoSinSigno: Boolean = false): LecturaNotificacion? {
         val completo = listOfNotNull(titulo, texto).joinToString(". ").replace('\u00A0', ' ')
-        if (completo.isBlank() || DESCARTAR.containsMatchIn(completo)) return null
+        if (completo.isBlank() || DESCARTAR.containsMatchIn(completo) || PUBLICIDAD.containsMatchIn(completo)) return null
+        if (!MOVIMIENTO.containsMatchIn(completo)) return null
         val monto = buscarMonto(completo, MONTO)
             ?: (if (montoSinSigno) buscarMonto(completo, MONTO_SIN_SIGNO) else null)
             ?: return null

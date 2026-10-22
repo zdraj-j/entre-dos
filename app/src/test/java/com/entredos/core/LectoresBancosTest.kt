@@ -61,4 +61,31 @@ class LectoresBancosTest {
         assertEquals(ResultadoLector.Descartada, LectoresBancos.leer("com.nu.production", "Nu", "Tu código para la compra de $90.000 es 123456"))
         assertEquals(ResultadoLector.Descartada, LectoresBancos.leer("com.davivienda.daviviendaapp", null, "Compra rechazada por $10.000 en X"))
     }
+
+    @Test fun smsDePublicidadDelBancoNoEsGasto() {
+        assertEquals(
+            ResultadoLector.Descartada,
+            LectoresBancos.leer("com.google.android.apps.messaging", "85784", "Banco de Bogota te ofrece credito de libre inversion hasta $30.000.000. Pidelo ya en bancodebogota.com/credito"),
+        )
+        assertEquals(
+            ResultadoLector.Descartada,
+            LectoresBancos.leer("com.google.android.apps.messaging", "85784", "Banco de Bogota: compra con tu Tarjeta Debito y obten 10% de descuento en restaurantes"),
+        )
+    }
+
+    @Test fun bancoMencionadoEnElTexto() {
+        assertEquals("Bancolombia", LectoresBancos.bancoMencionado("Bancolombia le informa Compra por $50.000 en EXITO"))
+        assertEquals("Davivienda", LectoresBancos.bancoMencionado("Davivienda: compra aprobada por $20.000. Tambien en DaviPlata"))
+        assertEquals("Banco de Bogotá", LectoresBancos.bancoMencionado("Banco de Bogota: Tu compra por 20,900 fue aprobada"))
+        assertEquals("BBVA", LectoresBancos.bancoMencionado("BBVA: Compra por $12.000 en ARA"))
+        assertEquals(null, LectoresBancos.bancoMencionado("Compraste $1.000 en TIENDA"))
+    }
+
+    @Test fun origenDeUnGastoDetectado() {
+        assertEquals("Nequi", LectoresBancos.origen("Nequi", "com.nequi.MobileApp"))
+        assertEquals("Bancolombia", LectoresBancos.origen(null, "com.todo1.mobile"))
+        assertEquals("SMS", LectoresBancos.origen(null, "com.samsung.android.messaging"))
+        assertEquals(null, LectoresBancos.origen(null, "com.otra.app"))
+        assertEquals(null, LectoresBancos.origen(null, null))
+    }
 }

@@ -10,7 +10,7 @@ Google Drive de una cuenta del hogar: sin Firebase ni servidores de terceros.
 | Pestaña | Para qué | Qué tiene |
 | --- | --- | --- |
 | **Anotar** | Registrar un gasto | Monto, "Hoy / Nota / Dividir", categorías y teclado. Tocar una categoría guarda. Arriba, cuánto queda del mes. |
-| **Gastos** | Ver y confirmar lo que pasó | Arriba, "Por confirmar" con las dos categorías más probables y "Otra". Debajo, los gastos del mes por día. Búsqueda y cambio de mes. |
+| **Gastos** | Ver y confirmar lo que pasó | Arriba, "Por confirmar" (a quién le llegó, fecha y banco; al tocar uno aparecen las categorías). Debajo, los gastos del mes por día. Búsqueda y cambio de mes. |
 | **Mes** | Saber cómo van | Lo que queda (con aviso si a este ritmo se pasan), Deudas en una fila, todas las categorías, quién pagó y "Cerrar el mes". |
 | **Hogar** | Lo que se configura una vez | Los dos titulares, categorías y topes, gastos fijos, meses anteriores y Ajustes. |
 
@@ -18,7 +18,7 @@ Diseño aprobado (claro y oscuro): ver `docs/DISENO.md`.
 
 ## Qué hace
 
-- **Detección automática:** lee los avisos de Bancolombia, Banco de Bogotá, Davivienda, DaviPlata, Nequi, Nu y RappiCard; y, si se activa, de otras apps elegidas (siempre quedan por confirmar).
+- **Detección automática:** lee los avisos de Bancolombia, Banco de Bogotá, Davivienda, DaviPlata, Nequi, Nu y RappiCard; y, si se activa, de otras apps elegidas (siempre quedan por confirmar). Descarta publicidad, recordatorios y avisos que no dicen que salió plata.
 - **Clasificación que aprende:** con 3 confirmaciones del mismo comercio en la misma categoría, se clasifica solo. Gastos fijos con monto parecido se confirman solos.
 - **Deudas automáticas:** categoría de una persona pagada por la otra = deuda completa; compartida = la mitad o el reparto ajustado. "Registrar un pago" abona a las deudas más viejas primero.
 - **Mes:** cierre manual o automático, historial con resumen y descarga en CSV.
@@ -57,7 +57,7 @@ Regla de oro: toda escritura pasa por `Escritor`, que sella el cambio con el rel
 
 1. Abre la carpeta en Android Studio y deja que sincronice Gradle.
 2. Configura la cuenta de Google del hogar y Google Cloud: [`docs/CONFIGURACION.md`](docs/CONFIGURACION.md).
-3. `./gradlew test` (88 pruebas de la lógica pura).
+3. `./gradlew test` (96 pruebas de la lógica pura).
 4. Instala en los dos teléfonos y recorre [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
 
 ## Documentos
@@ -73,7 +73,7 @@ Regla de oro: toda escritura pasa por `Escritor`, que sella el cambio con el rel
 
 ## Estado
 
-Las 7 entregas del plan y el rediseño están en el código (versión 1.0.0). **Probado:** 88 pruebas de la lógica
+Las 7 entregas del plan y el rediseño están en el código (versión 1.0.0). **Probado:** 96 pruebas de la lógica
 pura. **Sin probar todavía en un dispositivo:** todo lo de Android (compilación, pantallas, Drive, avisos, wifi).
 Los nombres de paquete y los textos de los bancos (`core/LectoresBancos.kt`) deben confirmarse con
 Hogar › Ajustes › Diagnóstico en los teléfonos reales.

@@ -2,6 +2,8 @@ package com.entredos.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.entredos.data.local.dao.AbonoDao
 import com.entredos.data.local.dao.ArchivoAplicadoDao
 import com.entredos.data.local.dao.CambioPendienteDao
@@ -33,7 +35,7 @@ import com.entredos.data.local.entity.RecurrenteEntity
 import com.entredos.data.local.entity.ReglaComercioEntity
 
 @Database(
-    version = 3,
+    version = 4,
     exportSchema = true,
     entities = [
         HogarEntity::class, MiembroEntity::class, CategoriaEntity::class,
@@ -62,5 +64,12 @@ abstract class EntreDosDatabase : RoomDatabase() {
 
     companion object {
         const val NOMBRE = "entre_dos.db"
+
+        /** 3 → 4: el gasto guarda el banco del que salió el pago. */
+        val MIGRACION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE gasto ADD COLUMN banco TEXT")
+            }
+        }
     }
 }

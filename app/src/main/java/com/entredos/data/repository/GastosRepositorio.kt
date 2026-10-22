@@ -38,6 +38,7 @@ class GastosRepositorio @Inject constructor(
         comercio: String? = null,
         origen: OrigenGasto = OrigenGasto.MANUAL,
         appBanco: String? = null,
+        banco: String? = null,
     ): GastoEntity {
         val total = partes.sumOf { it.monto }
         Reparto.validarDivision(total, partes.map { it.monto })?.let { throw IllegalArgumentException(it) }
@@ -46,7 +47,7 @@ class GastosRepositorio @Inject constructor(
                 Tablas.GASTO,
                 GastoEntity(
                     monto = total, nombre = nombre, comercio = comercio, fecha = fecha, pagadoPor = pagadoPor,
-                    tipo = TipoGasto.GASTO, estado = EstadoGasto.CONFIRMADO, origen = origen, appBanco = appBanco,
+                    tipo = TipoGasto.GASTO, estado = EstadoGasto.CONFIRMADO, origen = origen, appBanco = appBanco, banco = banco,
                 ),
             )
             guardarPartes(gasto, partes)
@@ -55,14 +56,17 @@ class GastosRepositorio @Inject constructor(
         }
     }
 
-    /** Gasto detectado en una notificación que espera clasificación. Aún no tiene partes. */
-    suspend fun registrarPendiente(monto: Long, nombre: String, comercio: String?, fecha: Long, pagadoPor: Miembro, appBanco: String): GastoEntity {
+    /**
+     * Gasto detectado en una notificación que espera clasificación. Aún no tiene partes.
+     * [pagadoPor] es quien recibió el aviso; [banco], desde dónde se pagó.
+     */
+    suspend fun registrarPendiente(monto: Long, nombre: String, comercio: String?, fecha: Long, pagadoPor: Miembro, appBanco: String, banco: String?): GastoEntity {
         require(monto > 0) { "El monto debe ser mayor que cero" }
         return escritor.guardar(
             Tablas.GASTO,
             GastoEntity(
                 monto = monto, nombre = nombre, comercio = comercio, fecha = fecha, pagadoPor = pagadoPor,
-                estado = EstadoGasto.PENDIENTE, origen = OrigenGasto.NOTIFICACION, appBanco = appBanco,
+                estado = EstadoGasto.PENDIENTE, origen = OrigenGasto.NOTIFICACION, appBanco = appBanco, banco = banco,
             ),
         )
     }

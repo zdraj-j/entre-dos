@@ -25,7 +25,9 @@ Para los dos. Cómo se usa la app en el día a día.
 ## Lo que detecta el banco (pestaña Gastos)
 
 - Cuando llega un aviso del banco, la app crea el gasto. Si sabe la categoría (porque ya aprendió el comercio o es un gasto fijo), lo guarda sola.
-- Si no, aparece arriba en **Por confirmar** con las dos categorías más probables: un toque y listo. **Otra** abre todas las categorías, y ahí también puedes marcarlo como **transferencia** o decir que **no es un gasto**.
+- Si no, aparece arriba en **Por confirmar**, en un recuadro naranja aparte de los gastos ya completos. Cada uno dice a quién le llegó el aviso, la fecha y la hora, y desde qué banco se pagó (en un SMS, el banco que nombra el mensaje).
+- Toca uno para ver las categorías: las dos más probables van primero y resaltadas; un toque y listo. **Varias categorías, transferencia o no es gasto** abre la hoja completa para repartirlo, marcarlo como **transferencia** o decir que **no es un gasto**.
+- No se anotan como gasto la publicidad ni los recordatorios (ofertas, descuentos, créditos preaprobados, enlaces, fechas de pago…): el aviso tiene que decir que salió plata (compra, pago, retiro, cobro…).
 - También puedes confirmar desde el aviso del teléfono, sin abrir la app.
 - La pestaña Gastos muestra un número cuando hay algo por confirmar.
 - Toca cualquier gasto para cambiarlo o borrarlo. Si solo cambias el nombre, la deuda que generó se mantiene.
