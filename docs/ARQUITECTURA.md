@@ -52,7 +52,7 @@ lo de Drive.
 
 `ServicioNotificaciones` → `LectoresBancos` (reglas por banco sobre el lector genérico) → `IngresoNotificacion`:
 duplicado (±5 min) → gasto fijo parecido → regla automática → si nada aplica, PENDIENTE y aviso "Gasto detectado" con
-tres botones. El texto de los avisos solo vive en memoria (Diagnóstico) y nunca se sube.
+dos categorías sugeridas y "No es un gasto" (al tocarlos no sale otro aviso). El texto de los avisos solo vive en memoria (Diagnóstico) y nunca se sube.
 
 ## Importación y exportación
 

@@ -14,7 +14,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Botón de categoría del aviso "Gasto detectado": clasifica sin abrir la app. */
+/**
+ * Botones del aviso "Gasto detectado": clasifican o descartan sin abrir la app. No se publica un aviso de
+ * confirmación: quien tocó el botón ya sabe lo que hizo.
+ */
 @AndroidEntryPoint
 class ReceptorAccionesAviso : BroadcastReceiver() {
 
@@ -23,17 +26,21 @@ class ReceptorAccionesAviso : BroadcastReceiver() {
     @Inject lateinit var avisos: AvisosGasto
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ACCION_CLASIFICAR) return
         val gastoId = intent.getStringExtra(EXTRA_GASTO) ?: return
-        val categoriaId = intent.getStringExtra(EXTRA_CATEGORIA) ?: return
+        // null = "No es un gasto".
+        val categoriaId = when (intent.action) {
+            ACCION_CLASIFICAR -> intent.getStringExtra(EXTRA_CATEGORIA) ?: return
+            ACCION_NO_ES_GASTO -> null
+            else -> return
+        }
         val pendiente = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             try {
                 val gasto = db.gastoDao().porId(gastoId)
                 avisos.cancelar(gastoId)
                 if (gasto != null && gasto.estado == EstadoGasto.PENDIENTE) {
-                    val confirmado = gastos.confirmarPendiente(gasto, gasto.nombre, listOf(ParteNueva(categoriaId, gasto.monto)))
-                    db.categoriaDao().porId(categoriaId)?.let { avisos.registrado(confirmado, it.nombre) }
+                    if (categoriaId != null) gastos.confirmarPendiente(gasto, gasto.nombre, listOf(ParteNueva(categoriaId, gasto.monto)))
+                    else gastos.ignorar(gasto)
                 }
             } finally {
                 pendiente.finish()
@@ -43,6 +50,7 @@ class ReceptorAccionesAviso : BroadcastReceiver() {
 
     companion object {
         const val ACCION_CLASIFICAR = "com.entredos.CLASIFICAR_GASTO"
+        const val ACCION_NO_ES_GASTO = "com.entredos.NO_ES_GASTO"
         const val EXTRA_GASTO = "gastoId"
         const val EXTRA_CATEGORIA = "categoriaId"
     }
