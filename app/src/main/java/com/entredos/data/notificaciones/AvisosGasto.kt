@@ -20,8 +20,9 @@ import javax.inject.Singleton
 
 /**
  * Avisos de la app (sección 2.4 del plan):
- * - "Gasto detectado" con hasta 3 botones de categoría; tocar el cuerpo abre la ventana obligatoria.
- * - "Gasto registrado", breve, que se quita solo.
+ * - "Gasto detectado" con hasta 2 botones de categoría y "No es un gasto" (Android muestra máximo 3);
+ *   tocar el cuerpo abre la ventana obligatoria.
+ * - "Gasto registrado", breve, que se quita solo; solo cuando una regla lo clasificó sin preguntar.
  */
 @Singleton
 class AvisosGasto @Inject constructor(@ApplicationContext private val context: Context) {
@@ -57,7 +58,7 @@ class AvisosGasto @Inject constructor(@ApplicationContext private val context: C
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(PendingIntent.getActivity(context, id(gasto.id), abrir, FLAGS))
-        sugerencias.take(3).forEachIndexed { i, c ->
+        sugerencias.take(2).forEachIndexed { i, c ->
             val accion = Intent(context, ReceptorAccionesAviso::class.java).apply {
                 action = ReceptorAccionesAviso.ACCION_CLASIFICAR
                 putExtra(ReceptorAccionesAviso.EXTRA_GASTO, gasto.id)
@@ -65,6 +66,11 @@ class AvisosGasto @Inject constructor(@ApplicationContext private val context: C
             }
             aviso.addAction(0, c.nombre, PendingIntent.getBroadcast(context, id(gasto.id) * 4 + i + 1, accion, FLAGS))
         }
+        val ignorar = Intent(context, ReceptorAccionesAviso::class.java).apply {
+            action = ReceptorAccionesAviso.ACCION_NO_ES_GASTO
+            putExtra(ReceptorAccionesAviso.EXTRA_GASTO, gasto.id)
+        }
+        aviso.addAction(0, "No es un gasto", PendingIntent.getBroadcast(context, id(gasto.id) * 4 + 3, ignorar, FLAGS))
         publicar(id(gasto.id), aviso)
     }
 
