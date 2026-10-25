@@ -46,7 +46,8 @@ data class CategoriaTecla(
 data class Borrador(
     val calculadora: Calculadora = Calculadora(),
     val fecha: LocalDate = LocalDate.now(),
-    val nota: String = "",
+    /** Vacío = el gasto toma el nombre de sus categorías. */
+    val nombre: String = "",
     val varias: Boolean = false,
     val seleccion: List<String> = emptyList(),
 )
@@ -112,7 +113,7 @@ class TecladoViewModel @Inject constructor(
 
     fun tecla(t: Tecla) = borrador.update { it.copy(calculadora = it.calculadora.tecla(t)) }
     fun fijarFecha(fecha: LocalDate) = borrador.update { it.copy(fecha = fecha) }
-    fun fijarNota(nota: String) = borrador.update { it.copy(nota = nota.trim()) }
+    fun fijarNombre(nombre: String) = borrador.update { it.copy(nombre = nombre.trim()) }
     fun alternarVarias() = borrador.update { it.copy(varias = !it.varias, seleccion = emptyList()) }
 
     /** Toque normal: guarda de una vez. En "Varias categorías", solo marca o desmarca. */
@@ -159,7 +160,7 @@ class TecladoViewModel @Inject constructor(
                 Reparto.validarDivision(total, partes.map { it.monto })?.let { error(it) }
                 val nombres = partes.mapNotNull { p -> estado.value.categorias.firstOrNull { it.id == p.categoriaId }?.nombre }
                 val gasto = gastos.registrar(
-                    nombre = previo.nota.ifBlank { nombres.joinToString(", ") },
+                    nombre = previo.nombre.ifBlank { nombres.joinToString(", ") },
                     fecha = momento(previo.fecha),
                     pagadoPor = yo,
                     partes = partes,

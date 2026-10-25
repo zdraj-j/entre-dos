@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,8 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallSplit
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,7 +60,7 @@ import com.entredos.ui.teclado.AvisoTeclado
 import com.entredos.ui.teclado.CategoriaTecla
 import com.entredos.ui.teclado.DialogoFecha
 import com.entredos.ui.teclado.DialogoMontos
-import com.entredos.ui.teclado.DialogoNota
+import com.entredos.ui.teclado.DialogoNombre
 import com.entredos.ui.teclado.DialogoReparto
 import com.entredos.ui.teclado.TecladoViewModel
 import java.time.LocalDate
@@ -67,7 +68,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Pestaña Anotar: monto, categorías y teclado. Tocar una categoría guarda el gasto.
+ * Pestaña Anotar: monto, fecha, nombre, categorías y teclado. Tocar una categoría guarda el gasto.
  * Arriba, un solo dato de contexto: cuánto queda del mes.
  */
 @Composable
@@ -89,7 +90,8 @@ fun PantallaAnotar(vm: TecladoViewModel = hiltViewModel()) {
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(barra) }, containerColor = MaterialTheme.colorScheme.background) { margen ->
+    // Los bordes del sistema ya los descuenta el Scaffold principal; contarlos aquí otra vez quitaba espacio al monto y a las opciones.
+    Scaffold(snackbarHost = { SnackbarHost(barra) }, containerColor = MaterialTheme.colorScheme.background, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { margen ->
         Column(Modifier.fillMaxSize().padding(margen)) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Anotar gasto", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
@@ -103,8 +105,8 @@ fun PantallaAnotar(vm: TecladoViewModel = hiltViewModel()) {
                 }
             }
 
-            // Monto y opciones del gasto
-            Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
+            // Monto: ocupa el espacio que sobre
+            Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (b.calculadora.tieneOperacion) Text(b.calculadora.textoExpresion, style = MaterialTheme.typography.bodyLarge.merge(EstiloCifras), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     FormatoPesos.pesos(maxOf(b.calculadora.total, 0)),
@@ -112,11 +114,16 @@ fun PantallaAnotar(vm: TecladoViewModel = hiltViewModel()) {
                     color = if (b.calculadora.valido) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
                     maxLines = 1,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Opcion(Icons.Default.CalendarToday, textoFecha(b.fecha), activa = b.fecha != LocalDate.now()) { dialogo = Dialogo.Fecha }
-                    Opcion(Icons.AutoMirrored.Filled.Notes, if (b.nota.isBlank()) "Nota" else b.nota, activa = b.nota.isNotBlank()) { dialogo = Dialogo.Nota }
-                    Opcion(Icons.AutoMirrored.Filled.CallSplit, "Dividir", activa = b.varias) { vm.alternarVarias() }
-                }
+            }
+
+            // Fecha, nombre y división: fuera del espacio flexible para que nunca queden tapados
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+                Opcion(Icons.Default.CalendarToday, textoFecha(b.fecha), activa = b.fecha != LocalDate.now()) { dialogo = Dialogo.Fecha }
+                Opcion(
+                    Icons.Default.Edit, if (b.nombre.isBlank()) "Nombre" else b.nombre, activa = b.nombre.isNotBlank(),
+                    modifier = Modifier.weight(1f, fill = false),
+                ) { dialogo = Dialogo.Nombre }
+                Opcion(Icons.AutoMirrored.Filled.CallSplit, "Dividir", activa = b.varias) { vm.alternarVarias() }
             }
 
             Categorias(
@@ -150,7 +157,7 @@ fun PantallaAnotar(vm: TecladoViewModel = hiltViewModel()) {
     }
 
     when (val d = dialogo) {
-        Dialogo.Nota -> DialogoNota(b.nota, { vm.fijarNota(it); dialogo = null }, { dialogo = null })
+        Dialogo.Nombre -> DialogoNombre(b.nombre, { vm.fijarNombre(it); dialogo = null }, { dialogo = null })
         Dialogo.Fecha -> DialogoFecha(b.fecha, { vm.fijarFecha(it); dialogo = null }, { dialogo = null })
         Dialogo.Montos -> DialogoMontos(
             total = b.calculadora.total,
@@ -167,16 +174,16 @@ fun PantallaAnotar(vm: TecladoViewModel = hiltViewModel()) {
 }
 
 private sealed interface Dialogo {
-    data object Nota : Dialogo
+    data object Nombre : Dialogo
     data object Fecha : Dialogo
     data object Montos : Dialogo
     data class Reparto(val categoria: CategoriaTecla) : Dialogo
 }
 
 @Composable
-private fun Opcion(icono: ImageVector, texto: String, activa: Boolean, alTocar: () -> Unit) {
+private fun Opcion(icono: ImageVector, texto: String, activa: Boolean, modifier: Modifier = Modifier, alTocar: () -> Unit) {
     Surface(
-        onClick = alTocar, shape = CircleShape,
+        onClick = alTocar, modifier = modifier, shape = CircleShape,
         color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
         border = androidx.compose.foundation.BorderStroke(1.dp, if (activa) Color.Transparent else MaterialTheme.colorScheme.outlineVariant),
     ) {

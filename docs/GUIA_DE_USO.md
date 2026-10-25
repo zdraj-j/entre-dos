@@ -18,7 +18,7 @@ Para los dos. Cómo se usa la app en el día a día.
 
 - Escribe el monto y **toca la categoría**: queda guardado con fecha de hoy y a tu nombre. Aparece **Deshacer** por unos segundos.
 - **000**, **+** y **−** sirven para montos grandes o para sumar varias cosas.
-- **Hoy:** para anotar algo de otro día. **Nota:** para ponerle nombre. **Dividir:** para repartir un gasto entre varias categorías.
+- **Hoy:** para anotar algo de otro día. **Nombre:** para ponerle nombre al gasto (si no, se llama como su categoría). **Dividir:** para repartir un gasto entre varias categorías.
 - **Toque largo en una categoría compartida:** cambiar el reparto (mitad, todo yo, todo mi pareja o un monto).
 - Arriba siempre ves cuánto queda del mes.
 

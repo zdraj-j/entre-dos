@@ -13,7 +13,7 @@ Diseño aprobado, claro y oscuro: lienzo "Entre dos – Diseño aprobado" (https
 | # | Pantalla | Contenido |
 | --- | --- | --- |
 | 0 | Bienvenida | Logo de dos círculos, "Entre dos", tres puntos de para qué sirve, "Conectar la cuenta del hogar" |
-| 1 | Anotar | "Anotar gasto" + "Quedan $ …"; monto; Hoy · Nota · Dividir; categorías (hasta 9, luego "Más…"); teclado |
+| 1 | Anotar | "Anotar gasto" + "Quedan $ …"; monto; Hoy · Nombre · Dividir; categorías (hasta 9, luego "Más…"); teclado |
 | 2 | Gastos | Título + "Mes · total ▾" + buscar; "Por confirmar · N" en recuadro naranja (quién, fecha, banco; al tocar, las categorías); gastos por día |
 | 2b | Elegir categoría | Hoja desde abajo: categorías en dos columnas, Guardar, No es un gasto |
 | 3 | Mes | Anillo + "Quedan"; aviso de ritmo; Deudas en una fila; Categorías completas; Quién pagó; Cerrar el mes |

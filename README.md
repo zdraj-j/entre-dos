@@ -9,7 +9,7 @@ Google Drive de una cuenta del hogar: sin Firebase ni servidores de terceros.
 
 | Pestaña | Para qué | Qué tiene |
 | --- | --- | --- |
-| **Anotar** | Registrar un gasto | Monto, "Hoy / Nota / Dividir", categorías y teclado. Tocar una categoría guarda. Arriba, cuánto queda del mes. |
+| **Anotar** | Registrar un gasto | Monto, "Hoy / Nombre / Dividir", categorías y teclado. Tocar una categoría guarda. Arriba, cuánto queda del mes. |
 | **Gastos** | Ver y confirmar lo que pasó | Arriba, "Por confirmar" (a quién le llegó, fecha y banco; al tocar uno aparecen las categorías). Debajo, los gastos del mes por día. Búsqueda y cambio de mes. |
 | **Mes** | Saber cómo van | Lo que queda (con aviso si a este ritmo se pasan), Deudas en una fila, todas las categorías, quién pagó y "Cerrar el mes". |
 | **Hogar** | Lo que se configura una vez | Los dos titulares, categorías y topes, gastos fijos, meses anteriores y Ajustes. |

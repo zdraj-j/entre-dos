@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.entredos.core.FormatoPesos
@@ -31,12 +32,20 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 @Composable
-internal fun DialogoNota(actual: String, alConfirmar: (String) -> Unit, alCancelar: () -> Unit) {
+internal fun DialogoNombre(actual: String, alConfirmar: (String) -> Unit, alCancelar: () -> Unit) {
     var texto by remember { mutableStateOf(actual) }
     AlertDialog(
         onDismissRequest = alCancelar,
-        title = { Text("Nota") },
-        text = { OutlinedTextField(texto, { texto = it.take(120) }, placeholder = { Text("Ej.: Almuerzo con la familia") }, singleLine = true) },
+        title = { Text("Nombre del gasto") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    texto, { texto = it.take(120) }, placeholder = { Text("Ej.: Almuerzo con la familia") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                )
+                Text("Si lo dejas vacío, el gasto se llama como su categoría.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
         confirmButton = { TextButton(onClick = { alConfirmar(texto) }) { Text("Listo") } },
         dismissButton = { TextButton(onClick = alCancelar) { Text("Cancelar") } },
     )
