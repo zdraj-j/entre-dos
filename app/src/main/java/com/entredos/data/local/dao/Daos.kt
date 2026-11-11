@@ -141,7 +141,7 @@ interface ParteGastoDao {
     @Query(
         """SELECT p.id AS parteId, p.gastoId AS gastoId, g.nombre AS concepto, g.fecha AS fecha,
                   g.pagadoPor AS pagadoPor, p.cargoA AS cargoA, p.cargoB AS cargoB,
-                  (g.origen = 'IMPORTACION') AS importado
+                  (g.origen = 'IMPORTACION') AS importado, p.categoriaId AS categoriaId
            FROM parte_gasto p JOIN gasto g ON g.id = p.gastoId
            WHERE p.sync_eliminado = 0 AND g.sync_eliminado = 0
              AND g.estado = 'CONFIRMADO'"""
@@ -178,7 +178,7 @@ interface DeudaManualDao {
     @Query("SELECT * FROM deuda_manual") suspend fun todosConEliminados(): List<DeudaManualEntity>
     @Query("SELECT * FROM deuda_manual WHERE id = :id") suspend fun porId(id: String): DeudaManualEntity?
     @Query(
-        """SELECT id, deudor, acreedor, monto, concepto, fecha FROM deuda_manual
+        """SELECT id, deudor, acreedor, monto, concepto, fecha, categoriaId FROM deuda_manual
            WHERE sync_eliminado = 0"""
     )
     fun observarParaDeudas(): Flow<List<DeudaManualInfo>>

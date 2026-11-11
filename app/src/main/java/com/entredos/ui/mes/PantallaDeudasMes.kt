@@ -33,11 +33,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.entredos.core.Deuda
 import com.entredos.core.FormatoPesos
 import com.entredos.core.Miembro
+import com.entredos.core.OrigenDeuda
 import com.entredos.data.importacion.nombreTitular
 import com.entredos.ui.comun.AvatarTitular
 import com.entredos.ui.comun.CampoMonto
 import com.entredos.ui.comun.EncabezadoVolver
 import com.entredos.ui.comun.EstadoVacio
+import com.entredos.ui.comun.IconoCategoria
 import com.entredos.ui.comun.Monto
 import com.entredos.ui.comun.Tarjeta
 
@@ -53,6 +55,7 @@ fun PantallaDeudasMes(alVolver: () -> Unit, vm: MesViewModel = hiltViewModel()) 
     val pareja = yo?.let { nombreTitular(e.miembros, it.otro) } ?: "Tu pareja"
     val neto = e.balance.neto
     val parejaUnida = e.miembros.size == 2
+    val categoriasPorId = e.categorias.associateBy { it.id }
     fun frase(d: Deuda) = when {
         d.deudor == yo -> "Le debes a ${nombreTitular(e.miembros, d.acreedor)}"
         d.acreedor == yo -> "${nombreTitular(e.miembros, d.deudor)} te debe"
@@ -83,10 +86,15 @@ fun PantallaDeudasMes(alVolver: () -> Unit, vm: MesViewModel = hiltViewModel()) 
                 Text("De dónde sale", style = MaterialTheme.typography.titleMedium)
                 if (e.abiertas.isEmpty()) EstadoVacio(Icons.Default.CheckCircle, "Nada pendiente", "Cuando uno pague algo que le toca al otro, aparecerá aquí.")
                 e.abiertas.forEach { d ->
-                    Row(Modifier.fillMaxWidth().clickable { abonando = d }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val categoria = d.categoriaId?.let { categoriasPorId[it] }
+                    Row(Modifier.fillMaxWidth().clickable { abonando = d }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        IconoCategoria(categoria?.color ?: "#8E8A9B")
                         Column(Modifier.weight(1f)) {
                             Text(d.concepto, style = MaterialTheme.typography.bodyLarge)
-                            Text(frase(d), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                listOfNotNull(categoria?.nombre ?: if (d.origen == OrigenDeuda.GASTO) "Sin categoría" else null, frase(d)).joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                         Monto(d.pendiente)
                     }
@@ -119,7 +127,7 @@ fun PantallaDeudasMes(alVolver: () -> Unit, vm: MesViewModel = hiltViewModel()) 
         AlertDialog(
             onDismissRequest = { abonando = null },
             title = { Text(d.concepto) },
-            text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { Text("${frase(d)}. Pendiente: ${FormatoPesos.pesos(d.pendiente)}"); CampoMonto(monto, { monto = it }, "Monto a abonar") } },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { d.categoriaId?.let { categoriasPorId[it] }?.let { Text("Rubro: ${it.nombre}", style = MaterialTheme.typography.bodySmall) }; Text("${frase(d)}. Pendiente: ${FormatoPesos.pesos(d.pendiente)}"); CampoMonto(monto, { monto = it }, "Monto a abonar") } },
             confirmButton = { TextButton(onClick = { vm.abonar(d, valor!!); abonando = null }, enabled = valor != null && valor in 1..d.pendiente) { Text(if (valor == d.pendiente) "Saldar" else "Abonar") } },
             dismissButton = { TextButton(onClick = { abonando = null }) { Text("Cancelar") } },
         )
