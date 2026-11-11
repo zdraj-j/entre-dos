@@ -33,6 +33,14 @@ class CalculadoraDeudasTest {
         assertTrue(deudas.isEmpty())
     }
 
+    @Test fun laDeudaLlevaElRubroDeDondeSale() {
+        val partes = listOf(ParteParaDeuda("1", "g-1", "Súper", 1, Miembro.A, 0, 30_000, false, categoriaId = "mercado"))
+        val manual = DeudaManualInfo("m1", Miembro.B, Miembro.A, 10_000, "Cine", 2, categoriaId = "salidas")
+        val deudas = CalculadoraDeudas.calcular(partes, listOf(manual), emptyMap(), true)
+        assertEquals("mercado", deudas.first { it.id == "1" }.categoriaId)
+        assertEquals("salidas", deudas.first { it.id == "m1" }.categoriaId)
+    }
+
     @Test fun sinParejaUnidaNoHayDeudas() {
         val deudas = CalculadoraDeudas.calcular(listOf(parte("1", Miembro.A, Cargos(0, 30_000))), emptyList(), emptyMap(), false)
         assertTrue(deudas.isEmpty())

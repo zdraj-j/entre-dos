@@ -13,6 +13,7 @@ data class ParteParaDeuda(
     val cargoA: Long,
     val cargoB: Long,
     val importado: Boolean,
+    val categoriaId: String? = null,
 )
 
 data class DeudaManualInfo(
@@ -22,6 +23,7 @@ data class DeudaManualInfo(
     val monto: Long,
     val concepto: String,
     val fecha: Long,
+    val categoriaId: String? = null,
 )
 
 enum class OrigenDeuda { GASTO, MANUAL }
@@ -36,6 +38,8 @@ data class Deuda(
     val abonado: Long,
     val concepto: String,
     val fecha: Long,
+    /** Rubro de donde sale la deuda (mercado, salidas…). Null si no tiene. */
+    val categoriaId: String? = null,
 ) {
     val pendiente: Long get() = (monto - abonado).coerceAtLeast(0)
     val saldada: Boolean get() = pendiente == 0L
@@ -81,6 +85,7 @@ object CalculadoraDeudas {
                     abonado = abonadoPorDeuda[p.parteId] ?: 0,
                     concepto = p.concepto,
                     fecha = p.fecha,
+                    categoriaId = p.categoriaId,
                 )
             }
 
@@ -97,6 +102,7 @@ object CalculadoraDeudas {
                     abonado = abonadoPorDeuda[m.id] ?: 0,
                     concepto = m.concepto,
                     fecha = m.fecha,
+                    categoriaId = m.categoriaId,
                 )
             }
 
